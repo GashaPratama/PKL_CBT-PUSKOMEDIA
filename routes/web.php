@@ -41,6 +41,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/admin/soal/store', [SoalController::class, 'store'])->name('admin.soal.store');
     Route::post('/admin/soal/import', [SoalImportController::class, 'import'])->name('admin.soal.import');
+    Route::post('/admin/soal/bulk-delete', [SoalController::class, 'bulkDelete'])->name('admin.soal.bulkDelete');
+
 
     Route::post('/admin/user/import', [UserController::class, 'import'])->name('admin.user.import');
     Route::post('/admin/user/reset/{id}', [UserController::class, 'resetPassword'])->name('admin.user.reset');

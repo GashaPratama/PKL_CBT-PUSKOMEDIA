@@ -9,8 +9,8 @@ class Ujian extends Model
 {
     use HasFactory;
 
-    protected $table = 'ujians'; // atau 'ujian' jika itu nama tabel kamu
-    protected $primaryKey = 'id'; // atau 'id_ujian' jika pakai custom PK
+    protected $table = 'ujians'; // ✅ pakai nama tabel yang sesuai database
+    protected $primaryKey = 'id'; // atau sesuaikan jika nama kolom PK lain
 
     protected $fillable = [
         'nama',
@@ -21,6 +21,6 @@ class Ujian extends Model
 
     public function soals()
     {
-    return $this->hasMany(Soal::class);
+        return $this->hasMany(Soal::class, 'ujian_id', 'id'); // pastikan foreign key cocok
     }
 }

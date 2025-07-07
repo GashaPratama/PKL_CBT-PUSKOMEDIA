@@ -22,20 +22,29 @@ class ExamController extends Controller
      */
     public function store(Request $request)
     {
+        // Validasi utama ujian
         $request->validate([
             'nama' => 'required|string|max:255',
             'tanggal' => 'required|date',
             'deskripsi' => 'nullable|string',
             'jumlah_peserta' => 'required|integer|min:0',
-            'soals.*.pertanyaan' => 'required|string',
-            'soals.*.opsi_a' => 'required|string',
-            'soals.*.opsi_b' => 'required|string',
-            'soals.*.opsi_c' => 'required|string',
-            'soals.*.opsi_d' => 'required|string',
-            'soals.*.jawaban_benar' => 'required|in:a,b,c,d',
         ]);
 
-        // Simpan ujian
+        // Validasi soal hanya jika ada input soal
+        if ($request->has('soals')) {
+            foreach ($request->soals as $index => $soal) {
+                $request->validate([
+                    "soals.$index.pertanyaan" => 'required|string',
+                    "soals.$index.opsi_a" => 'required|string',
+                    "soals.$index.opsi_b" => 'required|string',
+                    "soals.$index.opsi_c" => 'required|string',
+                    "soals.$index.opsi_d" => 'required|string',
+                    "soals.$index.jawaban_benar" => 'required|in:a,b,c,d',
+                ]);
+            }
+        }
+
+        // Simpan data ujian
         $ujian = Ujian::create([
             'nama' => $request->nama,
             'tanggal' => $request->tanggal,
@@ -43,9 +52,11 @@ class ExamController extends Controller
             'jumlah_peserta' => $request->jumlah_peserta,
         ]);
 
-        // Simpan soal-soal
-        foreach ($request->soals as $soal) {
-            $ujian->soals()->create($soal);
+        // Simpan soal-soal jika ada
+        if ($request->has('soals') && is_array($request->soals)) {
+            foreach ($request->soals as $soal) {
+                $ujian->soals()->create($soal);
+            }
         }
 
         return redirect()->route('admin.dashboard')->with('success', 'Ujian dan soal berhasil dibuat.');
@@ -58,6 +69,10 @@ class ExamController extends Controller
     {
         $exam = Ujian::findOrFail($id);
         return view('admin.ujian.detail', compact('exam'));
+
+        $exam = Ujian::findOrFail($id);
+        dd($exam);
+
     }
 
     /**

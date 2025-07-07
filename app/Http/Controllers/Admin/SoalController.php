@@ -24,4 +24,16 @@ class SoalController extends Controller
 
         return back()->with('success', 'Soal berhasil ditambahkan.');
     }
+
+    public function bulkDelete(Request $request)
+    {
+    $request->validate([
+        'soal_ids' => 'required|array',
+    ]);
+
+    \App\Models\Soal::whereIn('id', $request->soal_ids)->delete();
+
+    return back()->with('success', 'Soal yang dipilih berhasil dihapus.');
+    }
+
 }

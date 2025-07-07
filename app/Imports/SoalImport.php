@@ -1,34 +1,35 @@
 <?php
+
 namespace App\Imports;
 
 use App\Models\Soal;
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class SoalImport implements ToCollection
+class SoalImport implements ToModel, WithHeadingRow
 {
-    protected $ujianId;
+    protected $ujian_id;
 
-    public function __construct($ujianId)
+    public function __construct($ujian_id)
     {
-        $this->ujianId = $ujianId;
+        $this->ujian_id = $ujian_id;
     }
 
-    public function collection(Collection $rows)
+    public function model(array $row)
     {
-        // Lewati baris header
-        $rows->shift();
-
-        foreach ($rows as $row) {
-            Soal::create([
-                'ujian_id'       => $this->ujianId,
-                'pertanyaan'     => $row[0],
-                'opsi_a'         => $row[1],
-                'opsi_b'         => $row[2],
-                'opsi_c'         => $row[3],
-                'opsi_d'         => $row[4],
-                'jawaban_benar'  => strtolower($row[5]),
-            ]);
+        if (empty($row['pertanyaan'])) {
+            return null;
         }
+
+        return new Soal([
+            'ujian_id' => $this->ujian_id,
+            'pertanyaan' => $row['pertanyaan'],
+            'opsi_a' => $row['opsi_a'],
+            'opsi_b' => $row['opsi_b'],
+            'opsi_c' => $row['opsi_c'],
+            'opsi_d' => $row['opsi_d'],
+            'jawaban_benar' => strtolower($row['jawaban_benar']),
+        ]);
     }
 }
