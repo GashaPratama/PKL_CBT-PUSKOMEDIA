@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SoalController;
 use App\Http\Controllers\Admin\SoalImportController;
+use App\Http\Controllers\Admin\ExportController;
+
 
 Route::get('/', function () {
     return view('login');
@@ -48,7 +50,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/user/reset/{id}', [UserController::class, 'resetPassword'])->name('admin.user.reset');
     Route::delete('/admin/user/destroy/{id}', [UserController::class, 'destroy'])->name('admin.user.destroy');
     
+    Route::get('admin/ujian/{id}/nilai', [ExamController::class, 'nilai'])->name('admin.ujian.nilai');
+    Route::get('/admin/ujian/{id}/nilai', [ExamController::class, 'nilai'])->name('admin.nilai.show');
 
-
-    
+    Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+    Route::get('/ujian/{id}/unduh-excel', [ExportController::class, 'exportExcel'])->name('ujian.export.excel');
+    Route::get('/ujian/{id}/unduh-pdf', [ExportController::class, 'exportPdf'])->name('ujian.export.pdf');
+});
 });

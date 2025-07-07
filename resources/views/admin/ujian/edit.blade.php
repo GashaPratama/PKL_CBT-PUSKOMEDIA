@@ -9,7 +9,6 @@
     <div class="max-w-2xl mx-auto bg-white shadow-md rounded p-6">
         <h2 class="text-2xl font-bold mb-6">Edit Ujian</h2>
 
-        {{-- Form Edit Ujian --}}
         <form method="POST" action="{{ route('admin.ujian.update', $exam->id) }}" class="mb-8">
             @csrf
             @method('PUT')
@@ -34,12 +33,31 @@
                 <input type="number" name="jumlah_peserta" class="w-full border rounded p-2" value="{{ $exam->jumlah_peserta }}" required>
             </div>
 
+            <div class="mb-4">
+                <label class="block font-semibold mb-1">Jumlah Percobaan</label>
+                <input type="number" name="jumlah_percobaan" class="w-full border rounded p-2" min="1" value="{{ old('jumlah_percobaan', 1) }}" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="block font-semibold mb-1">Durasi Ujian (menit)</label>
+                <input type="number" name="durasi" class="w-full border rounded p-2" min="1" value="{{ old('durasi', 60) }}" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="block font-semibold mb-1">Waktu Mulai</label>
+                <input type="datetime-local" name="waktu_mulai" class="w-full border rounded p-2" value="{{ old('waktu_mulai', $exam->waktu_mulai ? \Carbon\Carbon::parse($exam->waktu_mulai)->format('Y-m-d\TH:i') : '') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block font-semibold mb-1">Waktu Selesai</label>
+                <input type="datetime-local" name="waktu_selesai" class="w-full border rounded p-2" value="{{ old('waktu_selesai', $exam->waktu_selesai ? \Carbon\Carbon::parse($exam->waktu_selesai)->format('Y-m-d\TH:i') : '') }}">
+            </div>
+
             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                 Perbarui
             </button>
-        </form>
 
-        {{-- Import Soal dari Excel --}}
+             {{-- Import Soal dari Excel --}}
         <hr class="my-6">
         <h3 class="text-xl font-bold mb-4">Import Soal dari Excel</h3>
 
@@ -64,6 +82,7 @@
                 📥 Download Template Excel
             </a>
         </div>
+        </form>
     </div>
 </body>
 </html>

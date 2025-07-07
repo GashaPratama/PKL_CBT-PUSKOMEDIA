@@ -74,43 +74,50 @@
 
 
         <!-- Ringkasan Ujian Terakhir -->
-        <div class="mt-10 bg-white shadow rounded-lg p-6 overflow-x-auto">
-            <h2 class="text-xl font-semibold mb-4">Daftar Ujian</h2>
-            <table class="min-w-full table-auto text-left border border-gray-200">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th class="px-4 py-2 border">#</th>
-                        <th class="px-4 py-2 border">Nama Ujian</th>
-                        <th class="px-4 py-2 border">Tanggal</th>
-                        <th class="px-4 py-2 border">Jumlah Peserta</th>
-                        <th class="px-4 py-2 border">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                     @foreach($ujians as $index => $ujian)
-                         <tr>
-                             <td class="px-4 py-2 border">{{ $index + 1 }}</td>
-                            <td class="px-4 py-2 border">{{ $ujian->nama }}</td>
-                            <td class="px-4 py-2 border">
-                                 {{ \Carbon\Carbon::parse($ujian->jadwalMulai)->translatedFormat('d F Y') }}
-                            </td>
-                            <td class="px-4 py-2 border">{{ $ujian->jumlah_peserta ?? '-' }}</td>
-                            <td class="px-4 py-2 border">
-                            <a href="{{ route('admin.ujian.detail', $ujian->id) }}" class="text-blue-500 hover:underline mr-2">Detail</a>
-                            <a href="{{ route('admin.ujian.edit', $ujian->id) }}" class="text-green-500 hover:underline mr-2">Edit</a>
-                            <form action="{{ route('admin.ujian.destroy', $ujian->id) }}" method="POST" style="display:inline" onsubmit="return confirm('Yakin hapus?')">
-                                @csrf
-                                @method('DELETE')
-                               <button type="submit" class="text-red-500 hover:underline">Hapus</button>
-                            </form>
+<div class="mt-10 bg-white shadow rounded-lg p-6 overflow-x-auto">
+    <h2 class="text-xl font-semibold mb-4">Daftar Ujian</h2>
+    <table class="min-w-full table-auto text-left border border-gray-200">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="px-4 py-2 border">#</th>
+                <th class="px-4 py-2 border">Nama Ujian</th>
+                <th class="px-4 py-2 border">Tanggal</th>
+                <th class="px-4 py-2 border">Jumlah Peserta</th>
+                <th class="px-4 py-2 border">Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($ujians as $index => $ujian)
+                <tr>
+                    <td class="px-4 py-2 border">{{ $index + 1 }}</td>
+                    <td class="px-4 py-2 border">{{ $ujian->nama }}</td>
+                    <td class="px-4 py-2 border">
+                        {{ \Carbon\Carbon::parse($ujian->jadwalMulai)->translatedFormat('d F Y') }}
+                    </td>
+                    <td class="px-4 py-2 border">{{ $ujian->jumlah_peserta ?? '-' }}</td>
+                    <td class="px-4 py-2 border space-y-1">
+                        <a href="{{ route('admin.ujian.detail', $ujian->id) }}" class="text-blue-500 hover:underline mr-2">Detail</a>
+                        <a href="{{ route('admin.ujian.edit', $ujian->id) }}" class="text-green-500 hover:underline mr-2">Edit</a>
+                        <a href="{{ route('admin.nilai.show', $ujian->id) }}" class="text-indigo-500 hover:underline mr-2">Lihat Nilai</a>
 
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <!-- Ringkasan Ujian Terakhir End-->
+                        <div class="flex flex-wrap gap-2 mt-1">
+                            <a href="{{ route('admin.ujian.export.excel', $ujian->id) }}" class="text-yellow-600 hover:underline text-sm">📊 Excel</a>
+                            <a href="{{ route('admin.ujian.export.pdf', $ujian->id) }}" class="text-red-600 hover:underline text-sm">📄 PDF</a>
+                        </div>
+
+                        <form action="{{ route('admin.ujian.destroy', $ujian->id) }}" method="POST" class="inline-block mt-1" onsubmit="return confirm('Yakin hapus?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-500 hover:underline">Hapus</button>
+                        </form>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
+<!-- Ringkasan Ujian Terakhir End-->
+
     </main>
 
 </body>

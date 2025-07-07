@@ -7,23 +7,27 @@
     <script>
         // Script Select All
         function toggleSelectAll(source) {
-            checkboxes = document.getElementsByName('soal_ids[]');
-            for (var i = 0, n = checkboxes.length; i < n; i++) {
+            const checkboxes = document.getElementsByName('soal_ids[]');
+            for (let i = 0; i < checkboxes.length; i++) {
                 checkboxes[i].checked = source.checked;
             }
         }
     </script>
 </head>
 <body class="bg-gray-100 min-h-screen p-6">
-    <div class="max-w-3xl mx-auto bg-white shadow-md rounded p-6">
+    <div class="max-w-4xl mx-auto bg-white shadow-md rounded p-6">
         <h1 class="text-2xl font-semibold mb-4">Detail Ujian</h1>
 
         <!-- Info Ujian -->
-        <div class="mb-4">
+        <div class="mb-4 space-y-2">
             <p><strong>Nama Ujian:</strong> {{ $exam->nama }}</p>
             <p><strong>Tanggal:</strong> {{ \Carbon\Carbon::parse($exam->tanggal)->translatedFormat('d F Y') }}</p>
             <p><strong>Jumlah Peserta:</strong> {{ $exam->jumlah_peserta }}</p>
             <p><strong>Deskripsi:</strong> {{ $exam->deskripsi }}</p>
+            <p><strong>Waktu Mulai:</strong> {{ \Carbon\Carbon::parse($exam->waktu_mulai)->translatedFormat('d F Y H:i') }}</p>
+            <p><strong>Waktu Selesai:</strong> {{ \Carbon\Carbon::parse($exam->waktu_selesai)->translatedFormat('d F Y H:i') }}</p>
+            <p><strong>Jumlah Percobaan:</strong> {{ $exam->jumlah_percobaan }}</p>
+            <p><strong>Durasi Ujian:</strong> {{ $exam->durasi }} menit</p>
         </div>
 
         <!-- Daftar Soal -->
@@ -46,8 +50,8 @@
                 @foreach($exam->soals as $soal)
                     <li>
                         <label class="block">
-                            
-                            <span class="font-semibold">{{ $soal->pertanyaan }}</span> <input type="checkbox" name="soal_ids[]" value="{{ $soal->id }}" class="mr-3">
+                            <span class="font-semibold">{{ $soal->pertanyaan }}</span>
+                            <input type="checkbox" name="soal_ids[]" value="{{ $soal->id }}" class="ml-2">
                         </label>
                         <ul class="ml-6 list-disc text-sm">
                             <li><strong>A:</strong> {{ $soal->opsi_a }}</li>

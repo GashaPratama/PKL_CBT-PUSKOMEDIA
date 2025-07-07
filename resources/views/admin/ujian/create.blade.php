@@ -40,12 +40,32 @@
             <div class="mb-4">
                 <label class="block font-semibold mb-1">Jumlah Peserta</label>
                 <input type="number" name="jumlah_peserta" class="w-full border rounded p-2" min="0" required>
-
             </div>
 
-            <div class="mb-6">
+            <div class="mb-4">
+            <div class="mb-4">
+                <label class="block font-semibold mb-1">Jumlah Percobaan</label>
+                <input type="number" name="jumlah_percobaan" class="w-full border rounded p-2" min="1" value="{{ old('jumlah_percobaan', 1) }}" required>
+            </div>
 
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Simpan</button>
+            <div class="mb-4">
+                <label class="block font-semibold mb-1">Durasi Ujian (menit)</label>
+                <input type="number" name="durasi" class="w-full border rounded p-2" min="1" value="{{ old('durasi', 60) }}" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="block font-semibold mb-1">Waktu Mulai</label>
+                <input type="datetime-local" name="waktu_mulai" class="w-full border rounded p-2" value="{{ old('waktu_mulai') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block font-semibold mb-1">Waktu Selesai</label>
+                <input type="datetime-local" name="waktu_selesai" class="w-full border rounded p-2" value="{{ old('waktu_selesai') }}">
+            </div>
+
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                Simpan
+            </button>
         </form>
     </div>
 </body>

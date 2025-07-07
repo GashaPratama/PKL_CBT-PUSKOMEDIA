@@ -17,10 +17,19 @@ class Ujian extends Model
         'tanggal',
         'deskripsi',
         'jumlah_peserta',
+        'waktu_mulai',
+        'waktu_selesai',
     ];
 
     public function soals()
     {
         return $this->hasMany(Soal::class, 'ujian_id', 'id'); // pastikan foreign key cocok
     }
+
+    public function hasilUjian()
+    {
+    return $this->hasMany(HasilUjian::class, 'ujian_id');
+    }
+    
+
 }
