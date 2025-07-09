@@ -29,10 +29,10 @@ class LoginController extends Controller
 
             // Arahkan berdasarkan peran
             if (Auth::user()->role === 'admin') {
-                return redirect()->intended('/admin/dashboard');
+                return redirect()->intended(route('admin.dashboard'));
             }
 
-            return redirect()->intended('/siswa/dashboard');
+            return redirect()->intended(route('siswa.dashboard'));
         }
 
         return back()->withErrors([
