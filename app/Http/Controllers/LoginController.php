@@ -32,7 +32,7 @@ class LoginController extends Controller
                 return redirect()->intended('/admin/dashboard');
             }
 
-            return redirect()->intended('/dashboard');
+            return redirect()->intended('/siswa/dashboard');
         }
 
         return back()->withErrors([

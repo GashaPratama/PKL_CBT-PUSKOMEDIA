@@ -92,4 +92,51 @@ class ExamController extends Controller
     return view('admin.ujian.nilai', compact('exam'));
     }
 
+    public function simulasi($id)
+    {
+    $exam = Ujian::with('soals')->findOrFail($id);
+
+    return view('admin.ujian.simulasi', compact('exam'));
+    }
+
+    public function submitSimulasi(Request $request, $id)
+    {
+    $exam = Ujian::with('soals')->findOrFail($id);
+    $jawaban = $request->input('jawaban', []);
+
+    $jumlahBenar = 0;
+    $totalSoal = $exam->soals->count();
+    $hasil = [];
+
+    foreach ($exam->soals as $soal) {
+        $idSoal = $soal->id;
+        $jawabanUser = $jawaban[$idSoal] ?? null;
+        $isCorrect = strtolower($jawabanUser) === strtolower($soal->jawaban_benar);
+
+        if ($isCorrect) {
+            $jumlahBenar++;
+        }
+
+        $hasil[] = [
+            'pertanyaan'     => $soal->pertanyaan,
+            'opsi_a'         => $soal->opsi_a,
+            'opsi_b'         => $soal->opsi_b,
+            'opsi_c'         => $soal->opsi_c,
+            'opsi_d'         => $soal->opsi_d,
+            'jawaban_benar'  => strtoupper($soal->jawaban_benar),
+            'jawaban_user'   => strtoupper($jawabanUser),
+            'benar'          => $isCorrect,
+        ];
+    }
+
+    $skor = $totalSoal > 0 ? round(($jumlahBenar / $totalSoal) * 100) : 0;
+
+    return view('admin.ujian.simulasi-hasil', [
+        'exam'        => $exam,
+        'hasil'       => $hasil,
+        'jumlahBenar' => $jumlahBenar,
+        'totalSoal'   => $totalSoal,
+        'skor'        => $skor,
+    ]);
+    }
 }

@@ -99,6 +99,8 @@
                         <a href="{{ route('admin.ujian.detail', $ujian->id) }}" class="text-blue-500 hover:underline mr-2">Detail</a>
                         <a href="{{ route('admin.ujian.edit', $ujian->id) }}" class="text-green-500 hover:underline mr-2">Edit</a>
                         <a href="{{ route('admin.nilai.show', $ujian->id) }}" class="text-indigo-500 hover:underline mr-2">Lihat Nilai</a>
+                        <a href="{{ route('admin.ujian.simulasi', $ujian->id) }}" class="text-yellow-500 hover:underline mr-2">🧪 Simulasi</a>
+
 
                         <div class="flex flex-wrap gap-2 mt-1">
                             <a href="{{ route('admin.ujian.export.excel', $ujian->id) }}" class="text-yellow-600 hover:underline text-sm">📊 Excel</a>

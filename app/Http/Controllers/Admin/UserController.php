@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Hash;
+use App\Exports\UserExport;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 
@@ -79,6 +81,15 @@ class UserController extends Controller
     return back()->with('success', 'Pengguna berhasil dihapus.');
     }
 
-    
-    
+    public function exportExcel()
+    {
+    return Excel::download(new UserExport, 'data_peserta.xlsx');
+    }
+
+    public function exportPdf()
+    {
+    $users = User::all();
+    $pdf = Pdf::loadView('admin.exports.users-pdf', compact('users'));
+    return $pdf->download('data_peserta.pdf');
+    }
 }

@@ -7,7 +7,19 @@
 </head>
 <body class="bg-gray-100 p-6">
     <div class="max-w-6xl mx-auto bg-white shadow-md rounded p-6">
-        <h2 class="text-2xl font-bold mb-6">Daftar Peserta</h2>
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">Daftar Peserta</h2>
+            <div class="space-x-2">
+                <a href="{{ route('admin.user.export.excel') }}"
+                   class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm">
+                    📥 Export Excel
+                </a>
+                <a href="{{ route('admin.user.export.pdf') }}"
+                   class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm">
+                    📄 Export PDF
+                </a>
+            </div>
+        </div>
 
         @if(session('success'))
             <div class="mb-4 p-3 bg-green-100 text-green-700 rounded">

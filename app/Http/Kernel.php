@@ -12,7 +12,6 @@ class Kernel extends HttpKernel
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         \App\Http\Middleware\TrustProxies::class,
-        
     ];
 
     protected $middlewareGroups = [
@@ -29,10 +28,13 @@ class Kernel extends HttpKernel
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
+
     ];
 
     protected $routeMiddleware = [
-        'auth' => \App\Http\Middleware\Authenticate::class,
-        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
-    ];
+    'auth'  => \App\Http\Middleware\Authenticate::class,
+    'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+    'role'  => \App\Http\Middleware\RoleMiddleware::class, 
+];
+
 }
