@@ -29,6 +29,7 @@ Route::view('/registrasi', 'registrasi akun');
 Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->group(function () {
     Route::get('/dashboard', [DashboardSiswaController::class, 'index'])->name('dashboard');
     Route::get('/ujian/{id}', [UjianController::class, 'index'])->name('ujian');
+    Route::get('/siswa/ujian/{id}', [UjianController::class, 'index'])->name('siswa.ujian');
     // Bisa ditambah: download soal, submit jawaban, simpan localStorage
 });
 

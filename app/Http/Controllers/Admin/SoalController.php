@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Soal;
+use App\Imports\SoalImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SoalController extends Controller
 {
@@ -35,5 +37,17 @@ class SoalController extends Controller
 
     return back()->with('success', 'Soal yang dipilih berhasil dihapus.');
     }
+
+    public function import(Request $request)
+{
+    $request->validate([
+        'file' => 'required|file|mimes:xlsx,xls',
+        'ujian_id' => 'required|exists:ujians,id'
+    ]);
+
+    Excel::import(new SoalImport($request->ujian_id), $request->file('file'));
+
+    return redirect()->back()->with('success', 'Soal berhasil diimpor.');
+}
 
 }

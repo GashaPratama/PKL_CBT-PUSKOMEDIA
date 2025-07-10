@@ -11,7 +11,10 @@ class UjianController extends Controller
     public function index($id)
     {
         $ujian = Ujian::with('soals')->findOrFail($id);
-        return view('siswa.ujian.index', compact('ujian'));
+        return view('siswa.ujian.index', [
+            'ujian' => $ujian,
+            'ujianId' => $ujian->id,
+        ]);
     }
 }
 
