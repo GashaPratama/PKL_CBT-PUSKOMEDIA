@@ -44,7 +44,7 @@
                                 <td class="px-4 py-2 text-gray-600">{{ $index + 1 }}</td>
                                 <td class="px-4 py-2 font-medium text-gray-800">{{ $ujian->nama }}</td>
                                 <td class="px-4 py-2 text-gray-600">{{ \Carbon\Carbon::parse($ujian->tanggal)->translatedFormat('d F Y') }}</td>
-                                <td class="px-4 py-2 text-gray-600">{{ \Carbon\Carbon::parse($ujian->jadwal_mulai)->translatedFormat('H:i') }} WIB</td>
+                                <td class="px-4 py-2 text-gray-600">{{ \Carbon\Carbon::parse($ujian->waktu_mulai)->translatedFormat('H:i') }} WIB</td>
                                 <td class="px-4 py-2 text-gray-600">{{ $ujian->durasi }} menit</td>
                             </tr>
                             <tr>
