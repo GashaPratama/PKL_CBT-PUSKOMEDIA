@@ -48,184 +48,245 @@
 </div>
 
 <script>
-    const ujianId = @json($ujianId);
-    const secretKey = 'kunc!_rahasia123';
+const ujianId = @json($ujianId);
+const secretKey = 'kunc!_rahasia123';
 
-    const jawabanKey = `ujian_${ujianId}_jawaban`;
-    const tandaiKey = `ujian_${ujianId}_tandai`;
-    const waktuKey = `ujian_${ujianId}_waktu_mulai`;
+const jawabanKey = `ujian_${ujianId}_jawaban`;
+const tandaiKey = `ujian_${ujianId}_tandai`;
+const waktuKey = `ujian_${ujianId}_waktu_mulai`;
 
-    const encrypted = localStorage.getItem(`ujian_${ujianId}_data`);
-    if (!encrypted) {
-        alert("❌ Soal tidak ditemukan. Silakan unduh terlebih dahulu.");
-        window.location.href = "/siswa/dashboard";
+function acakArray(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
     }
+    return arr;
+}
 
-    let decryptedData;
-    try {
-        decryptedData = JSON.parse(
-            CryptoJS.AES.decrypt(encrypted, secretKey).toString(CryptoJS.enc.Utf8)
-        );
-        if (!decryptedData || !decryptedData.soal || !Array.isArray(decryptedData.soal)) throw new Error();
-    } catch (e) {
-        alert("❌ Gagal membaca soal. Data rusak atau kunci salah.");
-        window.location.href = "/siswa/dashboard";
-    }
+const encrypted = localStorage.getItem(`ujian_${ujianId}_data`);
+if (!encrypted) {
+    alert("❌ Soal tidak ditemukan. Silakan unduh terlebih dahulu.");
+    window.location.href = "/siswa/dashboard";
+}
 
-    document.getElementById("namaUjian").textContent = "📘 Ujian: " + decryptedData.ujian.nama;
+let decryptedData;
+let soalList = [];
 
-    const durasiUjianDetik = decryptedData.ujian.durasi * 60;
-    let waktuMulai = localStorage.getItem(waktuKey);
-    if (!waktuMulai) {
-        waktuMulai = new Date().toISOString();
-        localStorage.setItem(waktuKey, waktuMulai);
-    }
+try {
+    decryptedData = JSON.parse(
+        CryptoJS.AES.decrypt(encrypted, secretKey).toString(CryptoJS.enc.Utf8)
+    );
 
-    const waktuBerjalan = Math.floor((new Date() - new Date(waktuMulai)) / 1000);
-    let waktu = durasiUjianDetik - waktuBerjalan;
-    if (waktu <= 0) {
-        alert("⏰ Waktu ujian telah habis.");
-        waktu = 0;
-    }
+    if (!decryptedData || !decryptedData.soal || !Array.isArray(decryptedData.soal)) throw new Error();
 
-    let jawabanSementara = {};
-    let tandaiPenting = {};
-    try {
-        jawabanSementara = JSON.parse(localStorage.getItem(jawabanKey)) || {};
-        tandaiPenting = JSON.parse(localStorage.getItem(tandaiKey)) || {};
-    } catch (e) {}
+    soalList = acakArray(decryptedData.soal.map(soal => {
+        const pilihan = acakArray([
+            { kode: 'A', teks: soal.opsi_a },
+            { kode: 'B', teks: soal.opsi_b },
+            { kode: 'C', teks: soal.opsi_c },
+            { kode: 'D', teks: soal.opsi_d }
+        ]);
 
-    const soalList = decryptedData.soal;
-    let currentIndex = 0;
+        const teksJawabanBenar = [soal.opsi_a, soal.opsi_b, soal.opsi_c, soal.opsi_d][soal.jawabanBenarIndex];
+        const jawabanBenarIndex = pilihan.findIndex(p => p.teks === teksJawabanBenar);
 
-    function countdown() {
-        const timer = document.getElementById("timer");
-        let menit = Math.floor(waktu / 60);
-        let detik = waktu % 60;
-        timer.textContent = `${menit}m ${detik < 10 ? '0' : ''}${detik}s`;
-        if (waktu <= 0) {
-            alert("⏰ Waktu habis!");
-            submitJawaban();
-        }
-        waktu--;
-    }
-    setInterval(countdown, 1000);
-
-    function renderSoal(index) {
-        const soal = soalList[index];
-        const selected = jawabanSementara[soal.id] || '';
-        document.getElementById('soal-container').innerHTML = `
-            <div class="p-4 bg-gray-50 rounded shadow text-sm sm:text-base">
-                <h3 class="font-semibold mb-2">Soal ${index + 1} dari ${soalList.length}:</h3>
-                <p class="mb-3">${soal.pertanyaan}</p>
-                <div class="space-y-2 ml-2">
-                    <label class="block"><input type="radio" name="radio_${soal.id}" value="A" ${selected === 'A' ? 'checked' : ''} onchange="simpanJawaban(${soal.id}, 'A')"> A. ${soal.opsi_a}</label>
-                    <label class="block"><input type="radio" name="radio_${soal.id}" value="B" ${selected === 'B' ? 'checked' : ''} onchange="simpanJawaban(${soal.id}, 'B')"> B. ${soal.opsi_b}</label>
-                    <label class="block"><input type="radio" name="radio_${soal.id}" value="C" ${selected === 'C' ? 'checked' : ''} onchange="simpanJawaban(${soal.id}, 'C')"> C. ${soal.opsi_c}</label>
-                    <label class="block"><input type="radio" name="radio_${soal.id}" value="D" ${selected === 'D' ? 'checked' : ''} onchange="simpanJawaban(${soal.id}, 'D')"> D. ${soal.opsi_d}</label>
-                </div>
-            </div>
-        `;
-        highlightNavigation();
-    }
-
-    function simpanJawaban(soalId, pilihan) {
-        jawabanSementara[soalId] = pilihan;
-        localStorage.setItem(jawabanKey, JSON.stringify(jawabanSementara));
-        updateTombolSelesai();
-        highlightNavigation();
-    }
-
-    function toggleTandai() {
-        const soal = soalList[currentIndex];
-        tandaiPenting[soal.id] = !tandaiPenting[soal.id];
-        localStorage.setItem(tandaiKey, JSON.stringify(tandaiPenting));
-        highlightNavigation();
-    }
-
-    function nextSoal() {
-        if (currentIndex < soalList.length - 1) {
-            currentIndex++;
-            renderSoal(currentIndex);
-        }
-    }
-
-    function prevSoal() {
-        if (currentIndex > 0) {
-            currentIndex--;
-            renderSoal(currentIndex);
-        }
-    }
-
-    function submitJawaban() {
-        if (Object.keys(jawabanSementara).length === 0) {
-            alert("🚫 Anda belum menjawab soal apa pun.");
-            return;
-        }
-
-        if (!confirm("Apakah kamu yakin ingin menyelesaikan ujian sekarang?")) return;
-
-        const hasil = {
-            ujian_id: ujianId,
-            waktu: new Date().toISOString(),
-            jawaban: jawabanSementara
+        return {
+            id: soal.id,
+            pertanyaan: soal.pertanyaan,
+            pilihan,
+            jawabanBenarIndex
         };
-        localStorage.setItem(`jawaban_ujian_${ujianId}`, JSON.stringify(hasil));
-        localStorage.removeItem(jawabanKey);
-        localStorage.removeItem(tandaiKey);
-        alert("✅ Jawaban disimpan! Anda akan diarahkan ke dashboard.");
-        window.location.href = "/siswa/dashboard";
+    }));
+
+} catch (e) {
+    alert("❌ Gagal membaca soal. Data rusak atau kunci salah.");
+    window.location.href = "/siswa/dashboard";
+}
+
+document.getElementById("namaUjian").textContent = "📘 Ujian: " + decryptedData.ujian.nama;
+
+const durasiUjianDetik = decryptedData.ujian.durasi * 60;
+let waktuMulai = localStorage.getItem(waktuKey);
+if (!waktuMulai) {
+    waktuMulai = new Date().toISOString();
+    localStorage.setItem(waktuKey, waktuMulai);
+}
+
+const waktuBerjalan = Math.floor((new Date() - new Date(waktuMulai)) / 1000);
+let waktu = durasiUjianDetik - waktuBerjalan;
+if (waktu <= 0) {
+    alert("⏰ Waktu ujian telah habis.");
+    waktu = 0;
+}
+
+let jawabanSementara = {};
+let tandaiPenting = {};
+try {
+    jawabanSementara = JSON.parse(localStorage.getItem(jawabanKey)) || {};
+    tandaiPenting = JSON.parse(localStorage.getItem(tandaiKey)) || {};
+} catch (e) {}
+
+let currentIndex = 0;
+
+function countdown() {
+    const timer = document.getElementById("timer");
+    let menit = Math.floor(waktu / 60);
+    let detik = waktu % 60;
+    timer.textContent = `${menit}m ${detik < 10 ? '0' : ''}${detik}s`;
+    if (waktu <= 0) {
+        alert("⏰ Waktu habis!");
+        submitJawaban();
     }
+    waktu--;
+}
+setInterval(countdown, 1000);
 
-    function renderNavigation() {
-        const nav = document.getElementById('navigasi-soal');
-        nav.innerHTML = '';
-        soalList.forEach((soal, i) => {
-            const btn = document.createElement('button');
-            btn.innerText = i + 1;
-            btn.id = `nav-${i}`;
-            btn.className = "rounded-full px-2 py-1 text-sm font-bold border";
-            btn.onclick = () => {
-                currentIndex = i;
-                renderSoal(currentIndex);
-            };
-            nav.appendChild(btn);
-        });
-    }
+function renderSoal(index) {
+    const soal = soalList[index];
+    const selected = jawabanSementara[soal.id] || '';
+    let pilihanHTML = '';
 
-    function highlightNavigation() {
-        soalList.forEach((soal, i) => {
-            const btn = document.getElementById(`nav-${i}`);
-            btn.className = "rounded-full px-2 py-1 text-sm font-bold border";
+    soal.pilihan.forEach(item => {
+        const abjad = item.kode;
+        pilihanHTML += `
+            <label class="block">
+                <input type="radio" name="radio_${soal.id}" value="${abjad}" ${selected === abjad ? 'checked' : ''} onchange="simpanJawaban(${soal.id}, '${abjad}')">
+                ${abjad}. ${item.teks}
+            </label>
+        `;
+    });
 
-            const answered = jawabanSementara[soal.id];
-            const marked = tandaiPenting[soal.id];
+    document.getElementById('soal-container').innerHTML = `
+        <div class="p-4 bg-gray-50 rounded shadow text-sm sm:text-base">
+            <h3 class="font-semibold mb-2">Soal ${index + 1} dari ${soalList.length}:</h3>
+            <p class="mb-3">${soal.pertanyaan}</p>
+            <div class="space-y-2 ml-2">${pilihanHTML}</div>
+        </div>
+    `;
 
-            if (i === currentIndex) {
-                btn.classList.add("bg-blue-500", "text-white");
-            } else if (marked) {
-                btn.classList.add("bg-red-500", "text-white");
-            } else if (answered) {
-                btn.classList.add("bg-green-500", "text-white");
-            } else {
-                btn.classList.add("bg-white", "text-black");
-            }
-        });
-    }
+    highlightNavigation();
+}
 
-    function updateTombolSelesai() {
-        const btn = document.getElementById("btn-selesai");
-        const aktif = Object.keys(jawabanSementara).length > 0;
-
-        btn.disabled = !aktif;
-        btn.classList.toggle("opacity-50", !aktif);
-        btn.classList.toggle("cursor-not-allowed", !aktif);
-    }
-
-    renderNavigation();
-    renderSoal(currentIndex);
+function simpanJawaban(soalId, pilihan) {
+    jawabanSementara[soalId] = pilihan;
+    localStorage.setItem(jawabanKey, JSON.stringify(jawabanSementara));
     updateTombolSelesai();
+    highlightNavigation();
+}
+
+function toggleTandai() {
+    const soal = soalList[currentIndex];
+    tandaiPenting[soal.id] = !tandaiPenting[soal.id];
+    localStorage.setItem(tandaiKey, JSON.stringify(tandaiPenting));
+    highlightNavigation();
+}
+
+function nextSoal() {
+    if (currentIndex < soalList.length - 1) {
+        currentIndex++;
+        renderSoal(currentIndex);
+    }
+}
+
+function prevSoal() {
+    if (currentIndex > 0) {
+        currentIndex--;
+        renderSoal(currentIndex);
+    }
+}
+
+function submitJawaban() {
+    if (Object.keys(jawabanSementara).length === 0) {
+        alert("🚫 Anda belum menjawab soal apa pun.");
+        return;
+    }
+
+    if (!confirm("Apakah kamu yakin ingin menyelesaikan ujian sekarang?")) return;
+
+    // Hitung jumlah jawaban benar
+    let jumlahBenar = 0;
+
+    soalList.forEach(soal => {
+        const jawabanUser = jawabanSementara[soal.id];
+        const jawabanBenar = soal.pilihan[soal.jawabanBenarIndex]?.kode;
+
+        if (jawabanUser && jawabanUser === jawabanBenar) {
+            jumlahBenar++;
+        }
+    });
+
+    const totalSoal = soalList.length;
+    const nilai = Math.round((jumlahBenar / totalSoal) * 100);
+
+    const hasil = {
+        ujian_id: ujianId,
+        waktu_mulai: waktuMulai,
+        waktu_selesai: new Date().toISOString(),
+        jawaban: jawabanSementara,
+        jumlah_benar: jumlahBenar,
+        total_soal: totalSoal,
+        nilai: nilai
+    };
+
+    localStorage.setItem(`jawaban_ujian_${ujianId}`, JSON.stringify(hasil));
+    localStorage.removeItem(jawabanKey);
+    localStorage.removeItem(tandaiKey);
+
+    alert(`✅ Ujian selesai! Nilai Anda: ${nilai}`);
+    window.location.href = "/siswa/dashboard";
+}
+
+function renderNavigation() {
+    const nav = document.getElementById('navigasi-soal');
+    nav.innerHTML = '';
+    soalList.forEach((soal, i) => {
+        const btn = document.createElement('button');
+        btn.innerText = i + 1;
+        btn.id = `nav-${i}`;
+        btn.className = "rounded-full px-2 py-1 text-sm font-bold border";
+        btn.onclick = () => {
+            currentIndex = i;
+            renderSoal(currentIndex);
+        };
+        nav.appendChild(btn);
+    });
+}
+
+function highlightNavigation() {
+    soalList.forEach((soal, i) => {
+        const btn = document.getElementById(`nav-${i}`);
+        btn.className = "rounded-full px-2 py-1 text-sm font-bold border";
+
+        const answered = jawabanSementara[soal.id];
+        const marked = tandaiPenting[soal.id];
+
+        if (i === currentIndex) {
+            btn.classList.add("bg-blue-500", "text-white");
+        } else if (marked) {
+            btn.classList.add("bg-red-500", "text-white");
+        } else if (answered) {
+            btn.classList.add("bg-green-500", "text-white");
+        } else {
+            btn.classList.add("bg-white", "text-black");
+        }
+    });
+}
+
+function updateTombolSelesai() {
+    const btn = document.getElementById("btn-selesai");
+    const aktif = Object.keys(jawabanSementara).length > 0;
+
+    btn.disabled = !aktif;
+    btn.classList.toggle("opacity-50", !aktif);
+    btn.classList.toggle("cursor-not-allowed", !aktif);
+}
+
+renderNavigation();
+renderSoal(currentIndex);
+updateTombolSelesai();
 </script>
+
 
 </body>
 </html>

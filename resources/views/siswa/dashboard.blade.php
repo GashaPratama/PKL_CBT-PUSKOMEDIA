@@ -12,7 +12,7 @@
 
     <div class="max-w-4xl mx-auto bg-white mt-4 mb-8 px-4 py-6 sm:p-8 rounded-xl shadow-lg">
 
-        {{-- Header --}}
+        <!-- Header -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
             <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">
                 📚 Selamat Datang, {{ auth()->user()->nama_lengkap }}
@@ -25,7 +25,7 @@
             </form>
         </div>
 
-        {{-- Daftar Ujian --}}
+        <!-- Daftar Ujian -->
         @if($ujians->count())
             <div class="overflow-x-auto rounded-md mb-4">
                 <table class="min-w-full divide-y divide-gray-200 border border-gray-300 text-sm">
@@ -43,36 +43,31 @@
                             <tr class="{{ $index % 2 === 0 ? 'bg-gray-50' : 'bg-white' }}">
                                 <td class="px-4 py-2 text-gray-600">{{ $index + 1 }}</td>
                                 <td class="px-4 py-2 font-medium text-gray-800">{{ $ujian->nama }}</td>
-                                <td class="px-4 py-2 text-gray-600">
-                                    {{ \Carbon\Carbon::parse($ujian->tanggal)->translatedFormat('d F Y') }}
-                                </td>
-                                <td class="px-4 py-2 text-gray-600">
-                                    {{ \Carbon\Carbon::parse($ujian->jadwal_mulai)->translatedFormat('H:i') }} WIB
-                                </td>
+                                <td class="px-4 py-2 text-gray-600">{{ \Carbon\Carbon::parse($ujian->tanggal)->translatedFormat('d F Y') }}</td>
+                                <td class="px-4 py-2 text-gray-600">{{ \Carbon\Carbon::parse($ujian->jadwal_mulai)->translatedFormat('H:i') }} WIB</td>
                                 <td class="px-4 py-2 text-gray-600">{{ $ujian->durasi }} menit</td>
                             </tr>
                             <tr>
                                 <td colspan="5" class="px-4 py-2">
-                                    <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-2 sm:space-y-0">
+                                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                                         <button 
                                             id="btn-kerjakan-{{ $ujian->id }}"
                                             data-id="{{ $ujian->id }}"
                                             onclick="mulaiUjian({{ $ujian->id }})"
-                                            class="btn-kerjakan inline-flex items-center justify-center bg-blue-600 text-white px-3 py-1.5 rounded shadow hover:bg-blue-700 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed w-full sm:w-auto">
+                                            class="btn-kerjakan flex-1 sm:flex-none inline-flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed">
                                             📝 Kerjakan
                                         </button>
                                         <button 
                                             onclick="downloadSoal({{ $ujian->id }})"
-                                            class="inline-flex items-center justify-center bg-green-600 text-white px-3 py-1.5 rounded shadow hover:bg-green-700 text-sm w-full sm:w-auto">
+                                            class="flex-1 sm:flex-none inline-flex items-center justify-center bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 text-sm">
                                             📩 Unduh Soal
                                         </button>
                                         <button 
-    onclick="kirimHasilUjian(this)" 
-    data-ujian-id="{{ $ujian->id }}" 
-    class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded text-sm w-full sm:w-auto">
-    🚀 Kirim Hasil Ujian
-</button>
-
+                                            onclick="kirimHasilUjian(this)" 
+                                            data-ujian-id="{{ $ujian->id }}" 
+                                            class="flex-1 sm:flex-none inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm">
+                                            🚀 Kirim Hasil Ujian
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -87,37 +82,33 @@
         @endif
     </div>
 
-    {{-- Script --}}
+    <!-- Script -->
     <script>
         function downloadSoal(ujianId) {
-    fetch(`/api/ujian/${ujianId}/soal`)
-        .then(response => {
-            if (!response.ok) throw new Error('Gagal mengambil soal');
-            return response.json();
-        })
-        .then(data => {
-            // 🔒 Pastikan jawaban_benar huruf besar sebelum enkripsi
-            if (data.soal && Array.isArray(data.soal)) {
-                data.soal.forEach(item => {
-                    if (item.jawaban_benar) {
-                        item.jawaban_benar = item.jawaban_benar.toUpperCase();
+            fetch(`/api/ujian/${ujianId}/soal`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Gagal mengambil soal');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.soal && Array.isArray(data.soal)) {
+                        data.soal.forEach(item => {
+                            if (item.jawaban_benar) {
+                                item.jawaban_benar = item.jawaban_benar.toUpperCase();
+                            }
+                        });
                     }
+                    const secretKey = 'kunc!_rahasia123';
+                    const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
+                    localStorage.setItem(`ujian_${ujianId}_data`, encrypted);
+                    alert("✅ Soal berhasil diunduh!");
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert("❌ Gagal mengunduh soal. Coba lagi.");
                 });
-            }
-
-            const secretKey = 'kunc!_rahasia123';
-            const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
-            localStorage.setItem(`ujian_${ujianId}_data`, encrypted);
-
-            alert("✅ Soal berhasil diunduh!");
-            location.reload();
-        })
-        .catch(error => {
-            console.error(error);
-            alert("❌ Gagal mengunduh soal. Coba lagi.");
-        });
-}
-
+        }
 
         function mulaiUjian(ujianId) {
             const encrypted = localStorage.getItem(`ujian_${ujianId}_data`);
@@ -134,9 +125,7 @@
                 const soal = localStorage.getItem(`ujian_${ujianId}_data`);
                 const jawaban = localStorage.getItem(`jawaban_ujian_${ujianId}`);
 
-                if (!soal) {
-                    btn.disabled = true;
-                }
+                if (!soal) btn.disabled = true;
 
                 if (jawaban) {
                     btn.innerText = "✅ Sudah Dikerjakan";
@@ -148,76 +137,70 @@
         });
 
         function kirimHasilUjian(button) {
-    const ujianId = button.getAttribute('data-ujian-id');
-    const secretKey = 'kunc!_rahasia123';
+            const ujianId = button.getAttribute('data-ujian-id');
+            const secretKey = 'kunc!_rahasia123';
+            const jawabanData = JSON.parse(localStorage.getItem(`jawaban_ujian_${ujianId}`));
+            const waktuMulai = new Date(localStorage.getItem(`ujian_${ujianId}_waktu_mulai`))
+                                  .toISOString().slice(0, 19).replace("T", " ");
+            const soalEncrypted = localStorage.getItem(`ujian_${ujianId}_data`);
 
-    const jawabanData = JSON.parse(localStorage.getItem(`jawaban_ujian_${ujianId}`));
-    const waktuMulai = new Date(localStorage.getItem(`ujian_${ujianId}_waktu_mulai`))
-                      .toISOString()
-                      .slice(0, 19)
-                      .replace("T", " ");
-    const soalEncrypted = localStorage.getItem(`ujian_${ujianId}_data`);
+            if (!jawabanData || !waktuMulai || !soalEncrypted) {
+                alert("❌ Data tidak lengkap. Tidak bisa mengirim hasil.");
+                return;
+            }
 
-    if (!jawabanData || !waktuMulai || !soalEncrypted) {
-        alert("❌ Data tidak lengkap. Tidak bisa mengirim hasil.");
-        return;
-    }
+            let soalData;
+            try {
+                const decrypted = CryptoJS.AES.decrypt(soalEncrypted, secretKey).toString(CryptoJS.enc.Utf8);
+                soalData = JSON.parse(decrypted);
+            } catch (e) {
+                alert("❌ Gagal dekripsi soal.");
+                return;
+            }
 
-    let soalData;
-    try {
-        const decrypted = CryptoJS.AES.decrypt(soalEncrypted, secretKey).toString(CryptoJS.enc.Utf8);
-        soalData = JSON.parse(decrypted);
-    } catch (e) {
-        alert("❌ Gagal dekripsi soal.");
-        return;
-    }
+            const jawabanUser = jawabanData.jawaban;
+            let jumlahBenar = 0;
 
-    const jawabanUser = jawabanData.jawaban;
-    let jumlahBenar = 0;
+            soalData.soal.forEach(item => {
+                const kunci = item.jawaban_benar?.toUpperCase();
+                const jawaban = jawabanUser[item.id];
+                if (jawaban && jawaban === kunci) jumlahBenar++;
+            });
 
-    soalData.soal.forEach((item) => {
-        const kunci = item.jawaban_benar?.toUpperCase();
-        const jawaban = jawabanUser[item.id];
-        if (jawaban && jawaban === kunci) {
-            jumlahBenar++;
+            const nilai = Math.round((jumlahBenar / soalData.soal.length) * 100);
+            const waktuSelesai = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+            fetch("{{ route('siswa.submit-hasil') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    ujian_id: ujianId,
+                    nilai: nilai,
+                    waktu_mulai: waktuMulai,
+                    waktu_selesai: waktuSelesai
+                })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    alert("✅ Nilai berhasil dikirim.");
+                    localStorage.removeItem(`jawaban_ujian_${ujianId}`);
+                    localStorage.removeItem(`ujian_${ujianId}_data`);
+                    localStorage.removeItem(`ujian_${ujianId}_waktu_mulai`);
+                    localStorage.removeItem(`ujian_${ujianId}_acak`);
+                    window.location.href = "/siswa/dashboard";
+                } else {
+                    alert("❌ Gagal mengirim: " + res.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("❌ Gagal mengirim data.");
+            });
         }
-    });
-
-    const nilai = Math.round((jumlahBenar / soalData.soal.length) * 100);
-    const waktuSelesai = new Date().toISOString().slice(0, 19).replace("T", " ");
-
-    fetch("{{ route('siswa.submit-hasil') }}", {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-    },
-    body: JSON.stringify({
-        ujian_id: ujianId,
-        nilai: nilai,
-        waktu_mulai: waktuMulai,
-        waktu_selesai: waktuSelesai
-    })
-})
-.then(res => res.json())
-.then(res => {
-    if (res.status === 'success') {
-        alert("✅ Nilai berhasil dikirim.");
-        localStorage.removeItem(`jawaban_ujian_${ujianId}`);
-        localStorage.removeItem(`ujian_${ujianId}_data`);
-        localStorage.removeItem(`ujian_${ujianId}_waktu_mulai`);
-        window.location.href = "/siswa/dashboard";
-    } else {
-        alert("❌ Gagal mengirim: " + res.message);
-    }
-})
-.catch(err => {
-    console.error(err);
-    alert("❌ Gagal mengirim data.");
-});
-}
-
-
     </script>
 
 </body>
