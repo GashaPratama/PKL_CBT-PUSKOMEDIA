@@ -204,36 +204,15 @@ function submitJawaban() {
 
     if (!confirm("Apakah kamu yakin ingin menyelesaikan ujian sekarang?")) return;
 
-    // Hitung jumlah jawaban benar
-    let jumlahBenar = 0;
-
-    soalList.forEach(soal => {
-        const jawabanUser = jawabanSementara[soal.id];
-        const jawabanBenar = soal.pilihan[soal.jawabanBenarIndex]?.kode;
-
-        if (jawabanUser && jawabanUser === jawabanBenar) {
-            jumlahBenar++;
-        }
-    });
-
-    const totalSoal = soalList.length;
-    const nilai = Math.round((jumlahBenar / totalSoal) * 100);
-
     const hasil = {
         ujian_id: ujianId,
-        waktu_mulai: waktuMulai,
-        waktu_selesai: new Date().toISOString(),
-        jawaban: jawabanSementara,
-        jumlah_benar: jumlahBenar,
-        total_soal: totalSoal,
-        nilai: nilai
+        waktu: new Date().toISOString(),
+        jawaban: jawabanSementara
     };
-
     localStorage.setItem(`jawaban_ujian_${ujianId}`, JSON.stringify(hasil));
     localStorage.removeItem(jawabanKey);
     localStorage.removeItem(tandaiKey);
-
-    alert(`✅ Ujian selesai! Nilai Anda: ${nilai}`);
+    alert("✅ Jawaban disimpan! Anda akan diarahkan ke dashboard.");
     window.location.href = "/siswa/dashboard";
 }
 
