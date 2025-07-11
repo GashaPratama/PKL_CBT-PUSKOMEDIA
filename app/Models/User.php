@@ -9,6 +9,8 @@ class User extends Authenticatable
 {
     use Notifiable;
 
+    
+
     protected $table = 'user'; // nama tabel (jika bukan 'users')
     protected $primaryKey = 'id_user'; // ini yang penting
 

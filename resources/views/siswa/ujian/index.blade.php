@@ -171,7 +171,6 @@
             jawaban: jawabanSementara
         };
         localStorage.setItem(`jawaban_ujian_${ujianId}`, JSON.stringify(hasil));
-        localStorage.removeItem(waktuKey);
         localStorage.removeItem(jawabanKey);
         localStorage.removeItem(tandaiKey);
         alert("✅ Jawaban disimpan! Anda akan diarahkan ke dashboard.");

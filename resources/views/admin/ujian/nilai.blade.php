@@ -18,16 +18,16 @@
                         <th class="px-4 py-2 border text-left">#</th>
                         <th class="px-4 py-2 border text-left">Nama Peserta</th>
                         <th class="px-4 py-2 border text-left">Email</th>
-                        <th class="px-4 py-2 border text-center">Skor</th>
+                        <th class="px-4 py-2 border text-center">Nilai</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($exam->hasilUjian as $index => $hasil)
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-2 border">{{ $index + 1 }}</td>
-                            <td class="px-4 py-2 border">{{ $hasil->user->nama_lengkap }}</td>
-                            <td class="px-4 py-2 border">{{ $hasil->user->email }}</td>
-                            <td class="px-4 py-2 border text-center">{{ $hasil->skor }}</td>
+                            <td class="px-4 py-2 border">{{ $hasil->user?->nama_lengkap ?? '-' }}</td>
+                            <td class="px-4 py-2 border">{{ $hasil->user?->email ?? '-' }}</td>
+                            <td class="px-4 py-2 border text-center">{{ $hasil->nilai ?? '-' }}</td>
                         </tr>
                     @empty
                         <tr>

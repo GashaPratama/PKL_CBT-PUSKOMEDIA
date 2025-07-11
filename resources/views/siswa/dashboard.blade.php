@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body class="bg-gradient-to-br from-blue-100 via-white to-purple-100 min-h-screen font-sans">
 
@@ -66,10 +67,12 @@
                                             📩 Unduh Soal
                                         </button>
                                         <button 
-                                            onclick="downloadSoal({{ $ujian->id }})"
-                                            class="inline-flex items-center justify-center bg-green-600 text-white px-3 py-1.5 rounded shadow hover:bg-green-700 text-sm w-full sm:w-auto">
-                                            📩 Unduh Soal
-                                        </button>
+    onclick="kirimHasilUjian(this)" 
+    data-ujian-id="{{ $ujian->id }}" 
+    class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded text-sm w-full sm:w-auto">
+    🚀 Kirim Hasil Ujian
+</button>
+
                                     </div>
                                 </td>
                             </tr>
@@ -87,23 +90,34 @@
     {{-- Script --}}
     <script>
         function downloadSoal(ujianId) {
-            fetch(`/api/ujian/${ujianId}/soal`)
-                .then(response => {
-                    if (!response.ok) throw new Error('Gagal mengambil soal');
-                    return response.json();
-                })
-                .then(data => {
-                    const secretKey = 'kunc!_rahasia123';
-                    const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
-                    localStorage.setItem(`ujian_${ujianId}_data`, encrypted);
-                    alert("✅ Soal berhasil diunduh!");
-                    location.reload();
-                })
-                .catch(error => {
-                    console.error(error);
-                    alert("❌ Gagal mengunduh soal. Coba lagi.");
+    fetch(`/api/ujian/${ujianId}/soal`)
+        .then(response => {
+            if (!response.ok) throw new Error('Gagal mengambil soal');
+            return response.json();
+        })
+        .then(data => {
+            // 🔒 Pastikan jawaban_benar huruf besar sebelum enkripsi
+            if (data.soal && Array.isArray(data.soal)) {
+                data.soal.forEach(item => {
+                    if (item.jawaban_benar) {
+                        item.jawaban_benar = item.jawaban_benar.toUpperCase();
+                    }
                 });
-        }
+            }
+
+            const secretKey = 'kunc!_rahasia123';
+            const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
+            localStorage.setItem(`ujian_${ujianId}_data`, encrypted);
+
+            alert("✅ Soal berhasil diunduh!");
+            location.reload();
+        })
+        .catch(error => {
+            console.error(error);
+            alert("❌ Gagal mengunduh soal. Coba lagi.");
+        });
+}
+
 
         function mulaiUjian(ujianId) {
             const encrypted = localStorage.getItem(`ujian_${ujianId}_data`);
@@ -132,6 +146,78 @@
                 }
             });
         });
+
+        function kirimHasilUjian(button) {
+    const ujianId = button.getAttribute('data-ujian-id');
+    const secretKey = 'kunc!_rahasia123';
+
+    const jawabanData = JSON.parse(localStorage.getItem(`jawaban_ujian_${ujianId}`));
+    const waktuMulai = new Date(localStorage.getItem(`ujian_${ujianId}_waktu_mulai`))
+                      .toISOString()
+                      .slice(0, 19)
+                      .replace("T", " ");
+    const soalEncrypted = localStorage.getItem(`ujian_${ujianId}_data`);
+
+    if (!jawabanData || !waktuMulai || !soalEncrypted) {
+        alert("❌ Data tidak lengkap. Tidak bisa mengirim hasil.");
+        return;
+    }
+
+    let soalData;
+    try {
+        const decrypted = CryptoJS.AES.decrypt(soalEncrypted, secretKey).toString(CryptoJS.enc.Utf8);
+        soalData = JSON.parse(decrypted);
+    } catch (e) {
+        alert("❌ Gagal dekripsi soal.");
+        return;
+    }
+
+    const jawabanUser = jawabanData.jawaban;
+    let jumlahBenar = 0;
+
+    soalData.soal.forEach((item) => {
+        const kunci = item.jawaban_benar?.toUpperCase();
+        const jawaban = jawabanUser[item.id];
+        if (jawaban && jawaban === kunci) {
+            jumlahBenar++;
+        }
+    });
+
+    const nilai = Math.round((jumlahBenar / soalData.soal.length) * 100);
+    const waktuSelesai = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+    fetch("{{ route('siswa.submit-hasil') }}", {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+    },
+    body: JSON.stringify({
+        ujian_id: ujianId,
+        nilai: nilai,
+        waktu_mulai: waktuMulai,
+        waktu_selesai: waktuSelesai
+    })
+})
+.then(res => res.json())
+.then(res => {
+    if (res.status === 'success') {
+        alert("✅ Nilai berhasil dikirim.");
+        localStorage.removeItem(`jawaban_ujian_${ujianId}`);
+        localStorage.removeItem(`ujian_${ujianId}_data`);
+        localStorage.removeItem(`ujian_${ujianId}_waktu_mulai`);
+        window.location.href = "/siswa/dashboard";
+    } else {
+        alert("❌ Gagal mengirim: " + res.message);
+    }
+})
+.catch(err => {
+    console.error(err);
+    alert("❌ Gagal mengirim data.");
+});
+}
+
+
     </script>
 
 </body>

@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ExportController;
 use App\Http\Controllers\Siswa\DashboardSiswaController;
 use App\Http\Controllers\Siswa\UjianController;
 use App\Http\Controllers\Api\SoalDownloadController;
+use App\Http\Controllers\Siswa\SiswaController;
 
 // =======================
 // ROUTE PUBLIK
@@ -31,6 +32,10 @@ Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->grou
     Route::get('/ujian/{id}', [UjianController::class, 'index'])->name('ujian');
     Route::get('/siswa/ujian/{id}', [UjianController::class, 'index'])->name('siswa.ujian');
     // Bisa ditambah: download soal, submit jawaban, simpan localStorage
+});
+
+Route::prefix('siswa')->middleware('auth')->group(function () {
+    Route::post('/submit-hasil', [SiswaController::class, 'submitHasil'])->name('siswa.submit-hasil');
 });
 
 // =======================

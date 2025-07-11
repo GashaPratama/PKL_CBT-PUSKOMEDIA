@@ -15,21 +15,19 @@
     <table>
         <thead>
             <tr>
-                <th>Nama</th>
-                <th>Skor</th>
-                <th>Jawaban Benar</th>
-                <th>Jawaban Salah</th>
-                <th>Tanggal</th>
+                <th>Nama Peserta</th>
+                <th>Email</th>
+                <th>Nilai</th>
+                <th>Waktu Kirim</th>
             </tr>
         </thead>
         <tbody>
             @foreach($ujian->hasilUjian as $hasil)
             <tr>
-                <td>{{ $hasil->user->nama_lengkap }}</td>
-                <td>{{ $hasil->skor }}</td>
-                <td>{{ $hasil->jawaban_benar }}</td>
-                <td>{{ $hasil->jawaban_salah }}</td>
-                <td>{{ $hasil->created_at->format('d M Y H:i') }}</td>
+                <td>{{ $hasil->user?->nama_lengkap ?? '-' }}</td>
+                <td>{{ $hasil->user?->email ?? '-' }}</td>
+                <td style="text-align: center">{{ $hasil->nilai ?? '-' }}</td>
+                <td>{{ $hasil->created_at ? $hasil->created_at->format('d M Y H:i') : '-' }}</td>
             </tr>
             @endforeach
         </tbody>

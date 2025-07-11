@@ -1,10 +1,8 @@
 <?php
 
-
 namespace App\Exports;
 
 use App\Models\HasilUjian;
-use App\Models\Ujian;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -24,17 +22,16 @@ class HasilUjianExport implements FromCollection, WithHeadings
             ->get()
             ->map(function ($item) {
                 return [
-                    'Nama' => $item->user->nama_lengkap,
-                    'Skor' => $item->skor,
-                    'Benar' => $item->jawaban_benar,
-                    'Salah' => $item->jawaban_salah,
-                    'Tanggal' => $item->created_at,
+                    'Nama'   => $item->user?->nama_lengkap ?? '-',
+                    'Email'  => $item->user?->email ?? '-',
+                    'Nilai'  => $item->nilai ?? '-',
+                    'Waktu'  => optional($item->created_at)->format('Y-m-d H:i'),
                 ];
             });
     }
 
     public function headings(): array
     {
-        return ['Nama', 'Skor', 'Jawaban Benar', 'Jawaban Salah', 'Tanggal'];
+        return ['Nama Lengkap', 'Email', 'Nilai', 'Waktu'];
     }
 }
