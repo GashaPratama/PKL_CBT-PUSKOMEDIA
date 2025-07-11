@@ -2,32 +2,33 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ujian - {{ $ujianId }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
-<body class="bg-gray-100 p-6 font-sans">
+<body class="bg-gray-100 p-4 sm:p-6 font-sans">
 
-<div class="max-w-6xl mx-auto bg-white p-6 rounded shadow flex flex-col lg:flex-row gap-6">
+<div class="w-full max-w-5xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-md flex flex-col-reverse lg:flex-row gap-6">
+
     <!-- Bagian Soal -->
     <div class="flex-1">
-        <h2 class="text-2xl font-bold mb-4" id="namaUjian">📘 Ujian</h2>
-        <div class="mb-4 text-red-500 font-semibold">Sisa Waktu: <span id="timer"></span></div>
+        <h2 class="text-xl sm:text-2xl font-bold mb-3 text-gray-800" id="namaUjian">📘 Ujian</h2>
+        <div class="mb-4 text-sm sm:text-base text-red-500 font-semibold">Sisa Waktu: <span id="timer"></span></div>
 
-        <form id="form-ujian" onsubmit="submitJawaban(); return false;">
+        <form onsubmit="submitJawaban(); return false;">
             <div id="soal-container"></div>
 
-            <div class="flex justify-between mt-6">
-                <button type="button" onclick="prevSoal()" class="bg-gray-500 text-white px-4 py-2 rounded">← Sebelumnya</button>
+            <div class="flex flex-col sm:flex-row justify-between gap-3 mt-6">
+                <button type="button" onclick="prevSoal()" class="bg-gray-600 text-white px-4 py-2 rounded">← Sebelumnya</button>
                 <button type="button" onclick="nextSoal()" class="bg-blue-600 text-white px-4 py-2 rounded">Selanjutnya →</button>
             </div>
 
-            <div class="mt-4 flex justify-between">
-                <button type="button" onclick="toggleTandai()" class="bg-red-100 text-red-600 px-4 py-2 rounded border border-red-400">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mt-4">
+                <button type="button" onclick="toggleTandai()" class="bg-red-100 text-red-600 px-4 py-2 rounded border border-red-400 text-sm">
                     🚩 Tandai Penting
                 </button>
-
-                <button id="btn-selesai" type="submit" disabled class="bg-green-600 opacity-50 cursor-not-allowed text-white px-6 py-2 rounded">
+                <button id="btn-selesai" type="submit" disabled class="bg-green-600 opacity-50 cursor-not-allowed text-white px-6 py-2 rounded text-sm">
                     ✅ Selesai Ujian
                 </button>
             </div>
@@ -35,13 +36,13 @@
     </div>
 
     <!-- Navigasi Soal -->
-    <div class="w-full lg:w-48">
+    <div class="w-full lg:w-64">
         <h3 class="text-lg font-semibold mb-2">📌 Navigasi Soal</h3>
-        <div id="navigasi-soal" class="grid grid-cols-5 gap-2"></div>
-        <div class="text-xs mt-4">
-            <span class="inline-block w-3 h-3 bg-blue-500 mr-1 rounded-full"></span> Aktif<br>
-            <span class="inline-block w-3 h-3 bg-green-500 mr-1 rounded-full"></span> Sudah Dijawab<br>
-            <span class="inline-block w-3 h-3 bg-red-500 mr-1 rounded-full"></span> Ditandai Penting
+        <div id="navigasi-soal" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2"></div>
+        <div class="text-xs mt-4 space-y-1">
+            <div><span class="inline-block w-3 h-3 bg-blue-500 mr-1 rounded-full"></span> Aktif</div>
+            <div><span class="inline-block w-3 h-3 bg-green-500 mr-1 rounded-full"></span> Sudah Dijawab</div>
+            <div><span class="inline-block w-3 h-3 bg-red-500 mr-1 rounded-full"></span> Ditandai Penting</div>
         </div>
     </div>
 </div>
@@ -54,14 +55,9 @@
     const tandaiKey = `ujian_${ujianId}_tandai`;
     const waktuKey = `ujian_${ujianId}_waktu_mulai`;
 
-    if (!ujianId) {
-        alert("ID Ujian tidak valid.");
-        window.location.href = "/siswa/dashboard";
-    }
-
     const encrypted = localStorage.getItem(`ujian_${ujianId}_data`);
     if (!encrypted) {
-        alert("Soal tidak ditemukan. Silakan unduh terlebih dahulu.");
+        alert("❌ Soal tidak ditemukan. Silakan unduh terlebih dahulu.");
         window.location.href = "/siswa/dashboard";
     }
 
@@ -78,7 +74,6 @@
 
     document.getElementById("namaUjian").textContent = "📘 Ujian: " + decryptedData.ujian.nama;
 
-    // Hitung waktu
     const durasiUjianDetik = decryptedData.ujian.durasi * 60;
     let waktuMulai = localStorage.getItem(waktuKey);
     if (!waktuMulai) {
@@ -93,7 +88,6 @@
         waktu = 0;
     }
 
-    // Load cache
     let jawabanSementara = {};
     let tandaiPenting = {};
     try {
@@ -108,12 +102,10 @@
         const timer = document.getElementById("timer");
         let menit = Math.floor(waktu / 60);
         let detik = waktu % 60;
-        timer.textContent = `${menit}m ${detik}s`;
-
+        timer.textContent = `${menit}m ${detik < 10 ? '0' : ''}${detik}s`;
         if (waktu <= 0) {
             alert("⏰ Waktu habis!");
             submitJawaban();
-            return;
         }
         waktu--;
     }
@@ -122,18 +114,18 @@
     function renderSoal(index) {
         const soal = soalList[index];
         const selected = jawabanSementara[soal.id] || '';
-        const container = document.getElementById('soal-container');
-        container.innerHTML = `
-            <div class="p-4 bg-gray-50 rounded shadow">
+        document.getElementById('soal-container').innerHTML = `
+            <div class="p-4 bg-gray-50 rounded shadow text-sm sm:text-base">
                 <h3 class="font-semibold mb-2">Soal ${index + 1} dari ${soalList.length}:</h3>
                 <p class="mb-3">${soal.pertanyaan}</p>
                 <div class="space-y-2 ml-2">
-                    <label><input type="radio" name="radio_${soal.id}" value="A" ${selected === 'A' ? 'checked' : ''} onchange="simpanJawaban(${soal.id}, 'A')"> A. ${soal.opsi_a}</label><br>
-                    <label><input type="radio" name="radio_${soal.id}" value="B" ${selected === 'B' ? 'checked' : ''} onchange="simpanJawaban(${soal.id}, 'B')"> B. ${soal.opsi_b}</label><br>
-                    <label><input type="radio" name="radio_${soal.id}" value="C" ${selected === 'C' ? 'checked' : ''} onchange="simpanJawaban(${soal.id}, 'C')"> C. ${soal.opsi_c}</label><br>
-                    <label><input type="radio" name="radio_${soal.id}" value="D" ${selected === 'D' ? 'checked' : ''} onchange="simpanJawaban(${soal.id}, 'D')"> D. ${soal.opsi_d}</label>
+                    <label class="block"><input type="radio" name="radio_${soal.id}" value="A" ${selected === 'A' ? 'checked' : ''} onchange="simpanJawaban(${soal.id}, 'A')"> A. ${soal.opsi_a}</label>
+                    <label class="block"><input type="radio" name="radio_${soal.id}" value="B" ${selected === 'B' ? 'checked' : ''} onchange="simpanJawaban(${soal.id}, 'B')"> B. ${soal.opsi_b}</label>
+                    <label class="block"><input type="radio" name="radio_${soal.id}" value="C" ${selected === 'C' ? 'checked' : ''} onchange="simpanJawaban(${soal.id}, 'C')"> C. ${soal.opsi_c}</label>
+                    <label class="block"><input type="radio" name="radio_${soal.id}" value="D" ${selected === 'D' ? 'checked' : ''} onchange="simpanJawaban(${soal.id}, 'D')"> D. ${soal.opsi_d}</label>
                 </div>
-            </div>`;
+            </div>
+        `;
         highlightNavigation();
     }
 
@@ -179,12 +171,9 @@
             jawaban: jawabanSementara
         };
         localStorage.setItem(`jawaban_ujian_${ujianId}`, JSON.stringify(hasil));
-
-        // Hapus cache
         localStorage.removeItem(waktuKey);
         localStorage.removeItem(jawabanKey);
         localStorage.removeItem(tandaiKey);
-
         alert("✅ Jawaban disimpan! Anda akan diarahkan ke dashboard.");
         window.location.href = "/siswa/dashboard";
     }

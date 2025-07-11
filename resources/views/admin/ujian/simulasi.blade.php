@@ -2,31 +2,47 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulasi Ujian - {{ $exam->nama }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        let waktu = {{ $exam->durasi * 60 }};
+        const waktuMulaiKey = "simulasi_waktu_mulai_{{ $exam->id }}";
+        const waktuSekarang = Math.floor(Date.now() / 1000);
+        let waktuMulai = localStorage.getItem(waktuMulaiKey);
+
+        if (!waktuMulai) {
+            waktuMulai = waktuSekarang;
+            localStorage.setItem(waktuMulaiKey, waktuMulai);
+        } else {
+            waktuMulai = parseInt(waktuMulai);
+        }
+
+        const durasi = {{ $exam->durasi * 60 }};
+        let waktu = durasi - (waktuSekarang - waktuMulai);
+
         function countdown() {
             const timer = document.getElementById("timer");
             let menit = Math.floor(waktu / 60);
             let detik = waktu % 60;
-            timer.innerHTML = `${menit}m ${detik}s`;
+            timer.innerHTML = `${menit}m ${detik < 10 ? '0' : ''}${detik}s`;
             if (waktu <= 0) {
                 alert("⏰ Waktu habis!");
                 submitFinal();
             }
             waktu--;
         }
+
         setInterval(countdown, 1000);
     </script>
 </head>
-<body class="bg-gray-100 p-6 font-sans">
-<div class="max-w-6xl mx-auto bg-white p-6 rounded shadow flex flex-col lg:flex-row gap-6">
+<body class="bg-gray-100 p-4 sm:p-6 font-sans">
+
+<div class="w-full max-w-5xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-md flex flex-col-reverse lg:flex-row gap-6">
 
     <!-- Bagian Soal -->
     <div class="flex-1">
-        <h2 class="text-2xl font-bold mb-4">🧪 Simulasi: {{ $exam->nama }}</h2>
-        <div class="mb-4 text-red-500 font-semibold">Sisa Waktu: <span id="timer"></span></div>
+        <h2 class="text-xl sm:text-2xl font-bold mb-3 text-gray-800">🧪 Simulasi: {{ $exam->nama }}</h2>
+        <div class="mb-4 text-sm sm:text-base text-red-500 font-semibold">Sisa Waktu: <span id="timer"></span></div>
 
         <form id="form-simulasi" method="POST" action="{{ route('admin.ujian.simulasi.submit', $exam->id) }}">
             @csrf
@@ -34,17 +50,16 @@
             <div id="soal-container"></div>
             <div id="hidden-inputs"></div>
 
-            <div class="flex justify-between mt-6">
-                <button type="button" onclick="prevSoal()" class="bg-gray-500 text-white px-4 py-2 rounded">← Sebelumnya</button>
+            <div class="flex flex-col sm:flex-row justify-between gap-3 mt-6">
+                <button type="button" onclick="prevSoal()" class="bg-gray-600 text-white px-4 py-2 rounded">← Sebelumnya</button>
                 <button type="button" onclick="nextSoal()" class="bg-blue-600 text-white px-4 py-2 rounded">Selanjutnya →</button>
             </div>
 
-            <div class="mt-4 flex justify-between">
-                <button type="button" onclick="toggleTandai()" class="bg-red-100 text-red-600 px-4 py-2 rounded border border-red-400">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mt-4">
+                <button type="button" onclick="toggleTandai()" class="bg-red-100 text-red-600 px-4 py-2 rounded border border-red-400 text-sm">
                     🚩 Tandai Penting
                 </button>
-
-                <button type="button" onclick="submitFinal()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded">
+                <button type="button" onclick="submitFinal()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded text-sm">
                     ✅ Selesai Simulasi
                 </button>
             </div>
@@ -52,13 +67,13 @@
     </div>
 
     <!-- Navigasi Soal -->
-    <div class="w-full lg:w-48">
+    <div class="w-full lg:w-64">
         <h3 class="text-lg font-semibold mb-2">📌 Navigasi Soal</h3>
-        <div id="navigasi-soal" class="grid grid-cols-5 gap-2"></div>
-        <div class="text-xs mt-4">
-            <span class="inline-block w-3 h-3 bg-blue-500 mr-1 rounded-full"></span> Aktif<br>
-            <span class="inline-block w-3 h-3 bg-green-500 mr-1 rounded-full"></span> Sudah Dijawab<br>
-            <span class="inline-block w-3 h-3 bg-red-500 mr-1 rounded-full"></span> Ditandai Penting
+        <div id="navigasi-soal" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2"></div>
+        <div class="text-xs mt-4 space-y-1">
+            <div><span class="inline-block w-3 h-3 bg-blue-500 mr-1 rounded-full"></span> Aktif</div>
+            <div><span class="inline-block w-3 h-3 bg-green-500 mr-1 rounded-full"></span> Sudah Dijawab</div>
+            <div><span class="inline-block w-3 h-3 bg-red-500 mr-1 rounded-full"></span> Ditandai Penting</div>
         </div>
     </div>
 </div>
@@ -101,17 +116,17 @@
         const selected = jawabanSementara[soal.id] || '';
 
         document.getElementById('soal-container').innerHTML = `
-            <div class="p-4 bg-gray-50 rounded shadow">
+            <div class="p-4 bg-gray-50 rounded shadow text-sm sm:text-base">
                 <h3 class="font-semibold mb-2">Soal ${index + 1} dari ${soalList.length}:</h3>
                 <p class="mb-3">${soal.pertanyaan}</p>
                 <div class="space-y-2 ml-2">
                     ${soal.opsi_diacak.map(opt => `
-                        <label>
+                        <label class="block">
                             <input type="radio" name="radio_${soal.id}" value="${opt.kode}"
                             ${selected === opt.kode ? 'checked' : ''}
                             onchange="simpanJawaban(${soal.id}, '${opt.kode}')">
                             ${opt.kode}. ${opt.teks}
-                        </label><br>
+                        </label>
                     `).join('')}
                 </div>
                 <input type="hidden" name="jawaban[${soal.id}]" id="jawaban_${soal.id}" value="${selected}">
@@ -158,6 +173,9 @@
             input.value = jawabanSementara[id];
             hiddenContainer.appendChild(input);
         }
+
+        // 🧹 Hapus waktu mulai dari localStorage
+        localStorage.removeItem("simulasi_waktu_mulai_{{ $exam->id }}");
 
         document.getElementById('form-simulasi').submit();
     }
