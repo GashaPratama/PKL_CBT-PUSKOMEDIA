@@ -119,30 +119,101 @@ if ('serviceWorker' in navigator) {
         }
 
         function mulaiUjian(ujianId) {
-            const encrypted = localStorage.getItem(`ujian_${ujianId}_data`);
-            if (!encrypted) {
-                alert("❌ Soal belum diunduh! Silakan klik 'Unduh Soal' terlebih dahulu.");
-                return;
-            }
-            window.location.href = `/siswa/ujian/${ujianId}`;
+    const encrypted = localStorage.getItem(`ujian_${ujianId}_data`);
+    if (!encrypted) {
+        alert("❌ Soal belum diunduh!");
+        return;
+    }
+
+    const secretKey = 'kunc!_rahasia123';
+    const jawaban = localStorage.getItem(`jawaban_ujian_${ujianId}`);
+    if (jawaban) {
+        alert("✅ Ujian ini sudah selesai dikerjakan.");
+        return;
+    }
+
+    try {
+        const decrypted = CryptoJS.AES.decrypt(encrypted, secretKey).toString(CryptoJS.enc.Utf8);
+        const data = JSON.parse(decrypted);
+        const jadwalMulai = new Date(data.jadwal_mulai);
+        const now = new Date();
+
+        if (now < jadwalMulai) {
+            alert("⏰ Belum waktunya mengerjakan ujian ini.");
+            return;
         }
 
+        window.location.href = `/siswa/ujian/${ujianId}`;
+    } catch (e) {
+        alert("❌ Gagal memuat data ujian.");
+    }
+}
+
+
         document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.btn-kerjakan').forEach(btn => {
-                const ujianId = btn.dataset.id;
-                const soal = localStorage.getItem(`ujian_${ujianId}_data`);
-                const jawaban = localStorage.getItem(`jawaban_ujian_${ujianId}`);
+    document.querySelectorAll('.btn-kerjakan').forEach(btn => {
+        const ujianId = btn.dataset.id;
+        const soalEncrypted = localStorage.getItem(`ujian_${ujianId}_data`);
+        const jawaban = localStorage.getItem(`jawaban_ujian_${ujianId}`);
 
-                if (!soal) btn.disabled = true;
+        const now = new Date();
 
-                if (jawaban) {
-                    btn.innerText = "✅ Sudah Dikerjakan";
-                    btn.disabled = true;
-                    btn.classList.remove("bg-blue-600", "hover:bg-blue-700");
-                    btn.classList.add("bg-gray-400", "cursor-not-allowed");
-                }
-            });
-        });
+        if (!soalEncrypted) {
+            btn.disabled = true;
+            btn.innerText = "⬇️ Unduh Dulu";
+            btn.classList.add("bg-gray-400", "cursor-not-allowed");
+            return;
+        }
+
+        const secretKey = 'kunc!_rahasia123';
+        try {
+            const soalDecrypted = CryptoJS.AES.decrypt(soalEncrypted, secretKey).toString(CryptoJS.enc.Utf8);
+            const soalData = JSON.parse(soalDecrypted);
+            const mulaiRaw = soalData?.jadwal_mulai ?? soalData?.ujian?.jadwal_mulai;
+
+
+
+            if (!mulaiRaw) {
+    console.warn(`❌ Data 'jadwal_mulai' tidak ditemukan pada ujian_${ujianId}_data`);
+    btn.disabled = true;
+    btn.innerText = "❌ Data Tidak Lengkap";
+    btn.classList.add("bg-gray-400", "cursor-not-allowed");
+    return;
+}
+
+const mulai = new Date(mulaiRaw);
+
+if (isNaN(mulai.getTime())) {
+    console.warn(`❌ Format 'jadwal_mulai' tidak valid pada ujian_${ujianId}_data`, mulaiRaw);
+    btn.disabled = true;
+    btn.innerText = "❌ Jadwal Salah";
+    btn.classList.add("bg-gray-400", "cursor-not-allowed");
+    return;
+}
+
+if (now < mulai) {
+    btn.disabled = true;
+    btn.innerText = `⏰ Belum Waktunya`;
+    btn.classList.add("bg-yellow-400", "cursor-not-allowed");
+    return;
+}
+        } catch (e) {
+            console.error("❌ Gagal dekripsi soal:", e);
+            btn.disabled = true;
+            btn.innerText = "❌ Data Corrupt";
+            btn.classList.add("bg-gray-400", "cursor-not-allowed");
+            return;
+        }
+
+        if (jawaban) {
+            btn.disabled = true;
+            btn.innerText = "✅ Sudah Dikerjakan";
+            btn.classList.remove("bg-blue-600", "hover:bg-blue-700");
+            btn.classList.add("bg-gray-400", "cursor-not-allowed");
+        }
+    });
+});
+
 
         function kirimHasilUjian(button) {
             const ujianId = button.getAttribute('data-ujian-id');
@@ -195,7 +266,6 @@ if ('serviceWorker' in navigator) {
             .then(res => {
                 if (res.status === 'success') {
                     alert("✅ Nilai berhasil dikirim.");
-                    localStorage.removeItem(`jawaban_ujian_${ujianId}`);
                     localStorage.removeItem(`ujian_${ujianId}_data`);
                     localStorage.removeItem(`ujian_${ujianId}_waktu_mulai`);
                     localStorage.removeItem(`ujian_${ujianId}_acak`);
