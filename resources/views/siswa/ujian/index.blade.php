@@ -6,6 +6,15 @@
     <title>Ujian - {{ $ujianId }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+    <script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js')
+    .then(() => console.log('✅ Service Worker ready'))
+    .catch(err => console.error('❌ SW failed:', err));
+}
+</script>
+    
 </head>
 <body class="bg-gray-100 p-4 sm:p-6 font-sans">
 

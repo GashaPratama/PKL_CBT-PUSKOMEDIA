@@ -1,14 +1,15 @@
-const CACHE_NAME = "cbt-cache-v1";
+const CACHE_NAME = "cbt-cache-v2";
 const urlsToCache = [
   '/',
   '/siswa/dashboard',
+  '/offline.html',
   '/js/tailwind.js',
   '/js/crypto-js.min.js',
-  '/offline.html',
-  '/favicon.ico'
+  '/favicon.ico',
+
 ];
 
-// Saat install: simpan file statis ke cache
+// Install SW dan simpan file penting
 self.addEventListener("install", event => {
   console.log("[SW] Installing Service Worker...");
   event.waitUntil(
@@ -18,40 +19,42 @@ self.addEventListener("install", event => {
         return cache.addAll(urlsToCache);
       })
   );
+  self.skipWaiting();
 });
 
-// Saat fetch: coba ambil dari jaringan dulu, jika gagal ambil dari cache
+// Aktivasi dan hapus cache lama
+self.addEventListener("activate", event => {
+  console.log("[SW] Activating Service Worker...");
+  event.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys.filter(key => key !== CACHE_NAME)
+            .map(key => caches.delete(key))
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+// Fetch handler
 self.addEventListener("fetch", event => {
-  console.log("[SW] Fetching:", event.request.url);
+  const { request } = event;
+
+  // Handle GET request saja
+  if (request.method !== 'GET') return;
+
   event.respondWith(
-    fetch(event.request)
+    fetch(request)
       .then(response => {
-        // Bisa juga menyimpan response ke cache di sini jika mau dynamic caching
         return response;
       })
       .catch(() => {
-        return caches.match(event.request)
-          .then(response => {
-            // Jika tidak ada cache-nya juga, fallback ke offline.html
-            return response || caches.match('/offline.html');
-          });
-      })
-  );
-});
-
-// Saat activate: hapus cache lama jika ada
-self.addEventListener("activate", event => {
-  console.log("[SW] Activating new Service Worker...");
-  event.waitUntil(
-    caches.keys().then(cacheNames =>
-      Promise.all(
-        cacheNames.map(name => {
-          if (name !== CACHE_NAME) {
-            console.log("[SW] Deleting old cache:", name);
-            return caches.delete(name);
+        return caches.match(request).then(cachedResponse => {
+          // Jika halaman dashboard diminta dan offline, tampilkan cache dashboard
+          if (request.url.includes('/siswa/dashboard')) {
+            return caches.match('/siswa/dashboard');
           }
-        })
-      )
-    )
+        });
+      })
   );
 });

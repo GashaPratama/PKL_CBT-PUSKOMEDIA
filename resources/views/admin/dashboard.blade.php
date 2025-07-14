@@ -89,8 +89,7 @@
                                     <a href="{{ route('admin.ujian.edit', $ujian->id) }}" class="text-green-500 hover:underline">Edit</a>
                                     <a href="{{ route('admin.nilai.show', $ujian->id) }}" class="text-indigo-500 hover:underline">Nilai</a>
                                     <a href="{{ route('admin.ujian.simulasi', $ujian->id) }}" class="text-yellow-500 hover:underline">🧪 Simulasi</a>
-                                    <a href="{{ route('admin.ujian.export.excel', $ujian->id) }}" class="text-yellow-600 hover:underline">📊 Excel</a>
-                                    <a href="{{ route('admin.ujian.export.pdf', $ujian->id) }}" class="text-red-600 hover:underline">📄 PDF</a>
+                                    <a href="{{ route('admin.ujian.export.excel', $ujian->id) }}" class="text-yellow-600 hover:underline">📊 Export Nilai ke Excel</a>
                                     <form action="{{ route('admin.ujian.destroy', $ujian->id) }}" method="POST" onsubmit="return confirm('Yakin hapus?')">
                                         @csrf
                                         @method('DELETE')

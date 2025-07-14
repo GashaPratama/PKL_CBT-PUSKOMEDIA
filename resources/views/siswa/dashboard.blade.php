@@ -7,6 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js')
+    .then(() => console.log('✅ Service Worker ready'))
+    .catch(err => console.error('❌ SW failed:', err));
+}
+</script>
 </head>
 <body class="bg-gradient-to-br from-blue-100 via-white to-purple-100 min-h-screen font-sans">
 

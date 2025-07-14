@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ujian - Offline Mode</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body class="bg-gray-100 p-4 font-sans">
+
+<div class="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow-md">
+  <h2 id="namaUjian" class="text-2xl font-bold text-gray-800 mb-2">📘 Ujian</h2>
+  <div class="mb-4 text-red-500 font-semibold text-sm">Sisa Waktu: <span id="timer"></span></div>
+
+  <form onsubmit="submitJawaban(); return false;">
+    <div id="soal-container"></div>
+    <div class="flex gap-2 mt-6">
+      <button type="button" onclick="prevSoal()" class="bg-gray-600 text-white px-4 py-2 rounded">← Sebelumnya</button>
+      <button type="button" onclick="nextSoal()" class="bg-blue-600 text-white px-4 py-2 rounded">Selanjutnya →</button>
+    </div>
+
+    <div class="flex justify-between items-center mt-4">
+      <button type="button" onclick="toggleTandai()" class="text-red-600 border border-red-500 px-4 py-2 rounded text-sm">🚩 Tandai</button>
+      <button id="btn-selesai" disabled class="bg-green-600 opacity-50 cursor-not-allowed text-white px-6 py-2 rounded text-sm">✅ Selesai</button>
+    </div>
+  </form>
+
+  <hr class="my-6">
+
+  <div>
+    <h3 class="text-lg font-semibold mb-2">📌 Navigasi Soal</h3>
+    <div id="navigasi-soal" class="grid grid-cols-5 gap-2"></div>
+  </div>
+</div>
+
+<script>
+const ujianId = window.location.hash.replace("#", ""); // ambil dari #mtk2025-01
+const secretKey = 'kunc!_rahasia123';
+
+const jawabanKey = `ujian_${ujianId}_jawaban`;
+const tandaiKey = `ujian_${ujianId}_tandai`;
+const waktuKey = `ujian_${ujianId}_waktu_mulai`;
+
+function acakArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const encrypted = localStorage.getItem(`ujian_${ujianId}_data`);
+if (!encrypted) {
+  alert("❌ Soal tidak ditemukan.");
+  window.location.href = "app-shell.html";
+}
+
+let data;
+try {
+  const decrypted = CryptoJS.AES.decrypt(encrypted, secretKey).toString(CryptoJS.enc.Utf8);
+  data = JSON.parse(decrypted);
+} catch (e) {
+  alert("❌ Gagal dekripsi soal.");
+  window.location.href = "app-shell.html";
+}
+
+let soalList = acakArray(data.soal.map(soal => {
+  const pilihan = acakArray([
+    { kode: 'A', teks: soal.opsi_a },
+    { kode: 'B', teks: soal.opsi_b },
+    { kode: 'C', teks: soal.opsi_c },
+    { kode: 'D', teks: soal.opsi_d }
+  ]);
+  return { id: soal.id, pertanyaan: soal.pertanyaan, pilihan };
+}));
+
+document.getElementById("namaUjian").textContent = "📘 Ujian: " + (data.ujian.nama || ujianId);
+
+let waktuMulai = localStorage.getItem(waktuKey);
+if (!waktuMulai) {
+  waktuMulai = new Date().toISOString();
+  localStorage.setItem(waktuKey, waktuMulai);
+}
+let waktu = data.ujian.durasi * 60 - Math.floor((new Date() - new Date(waktuMulai)) / 1000);
+if (waktu <= 0) waktu = 0;
+
+let jawabanSementara = JSON.parse(localStorage.getItem(jawabanKey) || "{}");
+let tandaiPenting = JSON.parse(localStorage.getItem(tandaiKey) || "{}");
+let currentIndex = 0;
+
+function countdown() {
+  let m = Math.floor(waktu / 60), d = waktu % 60;
+  document.getElementById("timer").textContent = `${m}m ${d}s`;
+  if (waktu <= 0) {
+    alert("⏰ Waktu habis!");
+    submitJawaban();
+  }
+  waktu--;
+}
+setInterval(countdown, 1000);
+
+function renderSoal(index) {
+  const soal = soalList[index];
+  const selected = jawabanSementara[soal.id] || '';
+  const pilihan = soal.pilihan.map(p =>
+    `<label class="block"><input type="radio" name="r_${soal.id}" value="${p.kode}" ${selected === p.kode ? 'checked' : ''} onchange="simpanJawaban(${soal.id}, '${p.kode}')"> ${p.kode}. ${p.teks}</label>`
+  ).join("");
+
+  document.getElementById("soal-container").innerHTML = `
+    <div class="p-4 bg-gray-50 rounded">
+      <h3 class="font-semibold mb-2">Soal ${index + 1}</h3>
+      <p class="mb-3">${soal.pertanyaan}</p>
+      <div>${pilihan}</div>
+    </div>`;
+  highlightNavigation();
+}
+
+function simpanJawaban(id, kode) {
+  jawabanSementara[id] = kode;
+  localStorage.setItem(jawabanKey, JSON.stringify(jawabanSementara));
+  updateTombol();
+  highlightNavigation();
+}
+
+function toggleTandai() {
+  const soal = soalList[currentIndex];
+  tandaiPenting[soal.id] = !tandaiPenting[soal.id];
+  localStorage.setItem(tandaiKey, JSON.stringify(tandaiPenting));
+  highlightNavigation();
+}
+
+function nextSoal() {
+  if (currentIndex < soalList.length - 1) {
+    currentIndex++;
+    renderSoal(currentIndex);
+  }
+}
+
+function prevSoal() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    renderSoal(currentIndex);
+  }
+}
+
+function submitJawaban() {
+  if (!confirm("Selesaikan ujian sekarang?")) return;
+  const hasil = {
+    ujian_id: ujianId,
+    waktu_selesai: new Date().toISOString(),
+    jawaban: jawabanSementara
+  };
+  localStorage.setItem(`jawaban_ujian_${ujianId}`, JSON.stringify(hasil));
+  alert("✅ Jawaban disimpan!");
+  window.location.href = "app-shell.html";
+}
+
+function renderNavigation() {
+  const nav = document.getElementById("navigasi-soal");
+  nav.innerHTML = "";
+  soalList.forEach((soal, i) => {
+    const btn = document.createElement("button");
+    btn.innerText = i + 1;
+    btn.className = "rounded-full px-3 py-1 text-sm font-bold border";
+    btn.onclick = () => { currentIndex = i; renderSoal(i); };
+    btn.id = `nav-${i}`;
+    nav.appendChild(btn);
+  });
+}
+
+function highlightNavigation() {
+  soalList.forEach((soal, i) => {
+    const btn = document.getElementById(`nav-${i}`);
+    const answered = jawabanSementara[soal.id];
+    const marked = tandaiPenting[soal.id];
+    btn.className = "rounded-full px-3 py-1 text-sm font-bold border";
+    if (i === currentIndex) btn.classList.add("bg-blue-500", "text-white");
+    else if (marked) btn.classList.add("bg-red-500", "text-white");
+    else if (answered) btn.classList.add("bg-green-500", "text-white");
+    else btn.classList.add("bg-white", "text-black");
+  });
+}
+
+function updateTombol() {
+  const btn = document.getElementById("btn-selesai");
+  const aktif = Object.keys(jawabanSementara).length > 0;
+  btn.disabled = !aktif;
+  btn.classList.toggle("opacity-50", !aktif);
+  btn.classList.toggle("cursor-not-allowed", !aktif);
+}
+
+renderNavigation();
+renderSoal(currentIndex);
+updateTombol();
+</script>
+</body>
+</html>
