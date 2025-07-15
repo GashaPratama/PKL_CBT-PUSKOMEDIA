@@ -171,32 +171,39 @@ if ('serviceWorker' in navigator) {
             const soalData = JSON.parse(soalDecrypted);
             const mulaiRaw = soalData?.jadwal_mulai ?? soalData?.ujian?.jadwal_mulai;
 
-
-
             if (!mulaiRaw) {
-    console.warn(`❌ Data 'jadwal_mulai' tidak ditemukan pada ujian_${ujianId}_data`);
-    btn.disabled = true;
-    btn.innerText = "❌ Data Tidak Lengkap";
-    btn.classList.add("bg-gray-400", "cursor-not-allowed");
-    return;
-}
+                console.warn(`❌ Data 'jadwal_mulai' tidak ditemukan pada ujian_${ujianId}_data`);
+                btn.disabled = true;
+                btn.innerText = "❌ Data Tidak Lengkap";
+                btn.classList.add("bg-gray-400", "cursor-not-allowed");
+                return;
+            }
 
-const mulai = new Date(mulaiRaw);
+            const mulai = new Date(mulaiRaw);
+            const selesai = new Date(mulai.getTime() + 2 * 60 * 60 * 1000); // +2 jam
 
-if (isNaN(mulai.getTime())) {
-    console.warn(`❌ Format 'jadwal_mulai' tidak valid pada ujian_${ujianId}_data`, mulaiRaw);
-    btn.disabled = true;
-    btn.innerText = "❌ Jadwal Salah";
-    btn.classList.add("bg-gray-400", "cursor-not-allowed");
-    return;
-}
+            if (isNaN(mulai.getTime())) {
+                console.warn(`❌ Format 'jadwal_mulai' tidak valid pada ujian_${ujianId}_data`, mulaiRaw);
+                btn.disabled = true;
+                btn.innerText = "❌ Jadwal Salah";
+                btn.classList.add("bg-gray-400", "cursor-not-allowed");
+                return;
+            }
 
-if (now < mulai) {
-    btn.disabled = true;
-    btn.innerText = `⏰ Belum Waktunya`;
-    btn.classList.add("bg-yellow-400", "cursor-not-allowed");
-    return;
-}
+            if (now < mulai) {
+                btn.disabled = true;
+                btn.innerText = `⏰ Belum Waktunya`;
+                btn.classList.add("bg-yellow-400", "cursor-not-allowed");
+                return;
+            }
+
+            if (now > selesai) {
+                btn.disabled = true;
+                btn.innerText = `⛔ Waktu Habis`;
+                btn.classList.add("bg-red-500", "cursor-not-allowed");
+                return;
+            }
+
         } catch (e) {
             console.error("❌ Gagal dekripsi soal:", e);
             btn.disabled = true;
