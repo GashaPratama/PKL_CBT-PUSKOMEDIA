@@ -27,6 +27,7 @@ class SoalDownloadController extends Controller
                 'opsi_c' => $soal->opsi_c,
                 'opsi_d' => $soal->opsi_d,
                 'jawaban_benar' => $soal->jawaban_benar,
+                'gambar' => $soal->gambar, 
             ];
         }),
     ]);

@@ -17,6 +17,7 @@ class Soal extends Model
         'opsi_c',
         'opsi_d',
         'jawaban_benar',
+        'gambar', 
     ];
 
     public function ujian()

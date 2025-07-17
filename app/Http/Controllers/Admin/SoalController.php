@@ -20,6 +20,7 @@ class SoalController extends Controller
             'opsi_c' => 'required|string',
             'opsi_d' => 'required|string',
             'jawaban_benar' => 'required|in:a,b,c,d',
+            'gambar' => 'nullable|string' 
         ]);
 
         Soal::create($request->all());
@@ -29,25 +30,24 @@ class SoalController extends Controller
 
     public function bulkDelete(Request $request)
     {
-    $request->validate([
-        'soal_ids' => 'required|array',
-    ]);
+        $request->validate([
+            'soal_ids' => 'required|array',
+        ]);
 
-    \App\Models\Soal::whereIn('id', $request->soal_ids)->delete();
+        Soal::whereIn('id', $request->soal_ids)->delete();
 
-    return back()->with('success', 'Soal yang dipilih berhasil dihapus.');
+        return back()->with('success', 'Soal yang dipilih berhasil dihapus.');
     }
 
     public function import(Request $request)
-{
-    $request->validate([
-        'file' => 'required|file|mimes:xlsx,xls',
-        'ujian_id' => 'required|exists:ujians,id'
-    ]);
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls',
+            'ujian_id' => 'required|exists:ujians,id'
+        ]);
 
-    Excel::import(new SoalImport($request->ujian_id), $request->file('file'));
+        Excel::import(new SoalImport($request->ujian_id), $request->file('file'));
 
-    return redirect()->back()->with('success', 'Soal berhasil diimpor.');
-}
-
+        return redirect()->back()->with('success', 'Soal berhasil diimpor.');
+    }
 }

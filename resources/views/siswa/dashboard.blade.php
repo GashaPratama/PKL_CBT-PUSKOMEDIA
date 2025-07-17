@@ -7,14 +7,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
+
     <script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/service-worker.js')
-    .then(() => console.log('✅ Service Worker ready'))
-    .catch(err => console.error('❌ SW failed:', err));
-}
-</script>
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(() => console.log('✅ Service Worker ready'))
+        .catch(err => console.error('❌ SW failed:', err));
+    }
+    </script>
 </head>
 <body class="bg-gradient-to-br from-blue-100 via-white to-purple-100 min-h-screen font-sans">
 
@@ -92,87 +93,162 @@ if ('serviceWorker' in navigator) {
 
     <!-- Script -->
     <script>
-        function downloadSoal(ujianId) {
-            fetch(`/api/ujian/${ujianId}/soal`)
-                .then(response => {
-                    if (!response.ok) throw new Error('Gagal mengambil soal');
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.soal && Array.isArray(data.soal)) {
-                        data.soal.forEach(item => {
-                            if (item.jawaban_benar) {
-                                item.jawaban_benar = item.jawaban_benar.toUpperCase();
-                            }
-                        });
-                    }
-                    const secretKey = 'kunc!_rahasia123';
-                    const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
-                    localStorage.setItem(`ujian_${ujianId}_data`, encrypted);
-                    alert("✅ Soal berhasil diunduh!");
-                    location.reload();
-                })
-                .catch(error => {
-                    console.error(error);
-                    alert("❌ Gagal mengunduh soal. Coba lagi.");
-                });
+    const secretKey = 'kunc!_rahasia123';
+
+    /**
+     * Unduh soal dari API, simpan terenkripsi ke localStorage,
+     * lalu preload semua gambar soal untuk offline.
+     */
+    function downloadSoal(ujianId) {
+        fetch(`/api/ujian/${ujianId}/soal`)
+            .then(response => {
+                if (!response.ok) throw new Error('Gagal mengambil soal');
+                return response.json();
+            })
+            .then(data => {
+                // Normalisasi: huruf kunci ke uppercase
+                if (data.soal && Array.isArray(data.soal)) {
+                    data.soal.forEach(item => {
+                        if (item.jawaban_benar) {
+                            item.jawaban_benar = item.jawaban_benar.toUpperCase();
+                        }
+                    });
+                }
+
+                // Simpan terenkripsi
+                const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
+                localStorage.setItem(`ujian_${ujianId}_data`, encrypted);
+
+                // Preload gambar untuk ujian ini
+                preloadGambarUjian(ujianId);
+
+                alert("✅ Soal berhasil diunduh!");
+                location.reload();
+            })
+            .catch(error => {
+                console.error(error);
+                alert("❌ Gagal mengunduh soal. Coba lagi.");
+            });
+    }
+
+    /**
+     * Buka data (encrypted/legacy raw) dari localStorage.
+     * Mengembalikan object atau null jika gagal.
+     */
+    function getSoalData(ujianId) {
+        const raw = localStorage.getItem(`ujian_${ujianId}_data`);
+        if (!raw) return null;
+
+        // Coba decrypt; jika gagal, anggap raw JSON (data lama)
+        let jsonStr;
+        try {
+            const decrypted = CryptoJS.AES.decrypt(raw, secretKey).toString(CryptoJS.enc.Utf8);
+            jsonStr = decrypted || raw;
+        } catch {
+            jsonStr = raw;
         }
 
-        function mulaiUjian(ujianId) {
-    const encrypted = localStorage.getItem(`ujian_${ujianId}_data`);
-    if (!encrypted) {
-        alert("❌ Soal belum diunduh!");
-        return;
+        try {
+            return JSON.parse(jsonStr);
+        } catch (e) {
+            console.error("❌ Gagal parse soal ujian", ujianId, e);
+            return null;
+        }
     }
 
-    const secretKey = 'kunc!_rahasia123';
-    const jawaban = localStorage.getItem(`jawaban_ujian_${ujianId}`);
-    if (jawaban) {
-        alert("✅ Ujian ini sudah selesai dikerjakan.");
-        return;
+    /**
+     * Preload semua gambar soal untuk 1 ujian (agar tersedia offline).
+     */
+    function preloadGambarUjian(ujianId) {
+        const data = getSoalData(ujianId);
+        if (!data || !Array.isArray(data.soal)) return;
+
+        data.soal.forEach(s => {
+            if (s.gambar) {
+                const img = new Image();
+                img.src = `/img/soal/${s.gambar}`;
+                console.log("📥 Preloading:", img.src);
+            }
+        });
     }
 
-    try {
-        const decrypted = CryptoJS.AES.decrypt(encrypted, secretKey).toString(CryptoJS.enc.Utf8);
-        const data = JSON.parse(decrypted);
-        const jadwalMulai = new Date(data.jadwal_mulai);
+    /**
+     * Preload semua gambar soal dari semua ujian yang sudah diunduh.
+     * Dipanggil saat dashboard load.
+     */
+    function preloadSemuaGambar() {
+        const semuaUjian = @json($ujians->pluck('id'));
+        semuaUjian.forEach(id => preloadGambarUjian(id));
+    }
+
+    /**
+     * Mulai ujian: validasi data & jadwal, lalu redirect ke halaman ujian.
+     */
+    function mulaiUjian(ujianId) {
+        const encrypted = localStorage.getItem(`ujian_${ujianId}_data`);
+        if (!encrypted) {
+            alert("❌ Soal belum diunduh!");
+            return;
+        }
+
+        const jawaban = localStorage.getItem(`jawaban_ujian_${ujianId}`);
+        if (jawaban) {
+            alert("✅ Ujian ini sudah selesai dikerjakan.");
+            return;
+        }
+
+        const data = getSoalData(ujianId);
+        if (!data) {
+            alert("❌ Gagal memuat data ujian.");
+            return;
+        }
+
+        // Jadwal bisa ada di root (versi lama) atau di data.ujian
+        const mulaiRaw = data.jadwal_mulai ?? data?.ujian?.jadwal_mulai;
+        if (!mulaiRaw) {
+            alert("❌ Jadwal ujian tidak ditemukan.");
+            return;
+        }
+
+        const jadwalMulai = new Date(mulaiRaw);
         const now = new Date();
-
         if (now < jadwalMulai) {
             alert("⏰ Belum waktunya mengerjakan ujian ini.");
             return;
         }
 
         window.location.href = `/siswa/ujian/${ujianId}`;
-    } catch (e) {
-        alert("❌ Gagal memuat data ujian.");
     }
-}
 
-
-        document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.btn-kerjakan').forEach(btn => {
-        const ujianId = btn.dataset.id;
-        const soalEncrypted = localStorage.getItem(`ujian_${ujianId}_data`);
-        const jawaban = localStorage.getItem(`jawaban_ujian_${ujianId}`);
-
+    /**
+     * Kondisikan state tombol "Kerjakan" di tabel ujian.
+     * Menonaktifkan bila belum waktunya, sudah dikerjakan, data corrupt, dll.
+     */
+    document.addEventListener('DOMContentLoaded', function () {
         const now = new Date();
 
-        if (!soalEncrypted) {
-            btn.disabled = true;
-            btn.innerText = "⬇️ Unduh Dulu";
-            btn.classList.add("bg-gray-400", "cursor-not-allowed");
-            return;
-        }
+        document.querySelectorAll('.btn-kerjakan').forEach(btn => {
+            const ujianId = btn.dataset.id;
+            const soalRaw = localStorage.getItem(`ujian_${ujianId}_data`);
+            const jawaban = localStorage.getItem(`jawaban_ujian_${ujianId}`);
 
-        const secretKey = 'kunc!_rahasia123';
-        try {
-            const soalDecrypted = CryptoJS.AES.decrypt(soalEncrypted, secretKey).toString(CryptoJS.enc.Utf8);
-            const soalData = JSON.parse(soalDecrypted);
-            const mulaiRaw = soalData?.jadwal_mulai ?? soalData?.ujian?.jadwal_mulai;
+            if (!soalRaw) {
+                btn.disabled = true;
+                btn.innerText = "⬇️ Unduh Dulu";
+                btn.classList.add("bg-gray-400", "cursor-not-allowed");
+                return;
+            }
 
+            const data = getSoalData(ujianId);
+            if (!data) {
+                btn.disabled = true;
+                btn.innerText = "❌ Data Corrupt";
+                btn.classList.add("bg-gray-400", "cursor-not-allowed");
+                return;
+            }
+
+            const mulaiRaw = data?.jadwal_mulai ?? data?.ujian?.jadwal_mulai;
             if (!mulaiRaw) {
-                console.warn(`❌ Data 'jadwal_mulai' tidak ditemukan pada ujian_${ujianId}_data`);
                 btn.disabled = true;
                 btn.innerText = "❌ Data Tidak Lengkap";
                 btn.classList.add("bg-gray-400", "cursor-not-allowed");
@@ -180,10 +256,9 @@ if ('serviceWorker' in navigator) {
             }
 
             const mulai = new Date(mulaiRaw);
-            const selesai = new Date(mulai.getTime() + 2 * 60 * 60 * 1000); // +2 jam
+            const selesai = new Date(mulai.getTime() + 2 * 60 * 60 * 1000); // +2 jam temp; ganti sesuai bisnis
 
             if (isNaN(mulai.getTime())) {
-                console.warn(`❌ Format 'jadwal_mulai' tidak valid pada ujian_${ujianId}_data`, mulaiRaw);
                 btn.disabled = true;
                 btn.innerText = "❌ Jadwal Salah";
                 btn.classList.add("bg-gray-400", "cursor-not-allowed");
@@ -204,88 +279,84 @@ if ('serviceWorker' in navigator) {
                 return;
             }
 
-        } catch (e) {
-            console.error("❌ Gagal dekripsi soal:", e);
-            btn.disabled = true;
-            btn.innerText = "❌ Data Corrupt";
-            btn.classList.add("bg-gray-400", "cursor-not-allowed");
+            if (jawaban) {
+                btn.disabled = true;
+                btn.innerText = "✅ Sudah Dikerjakan";
+                btn.classList.remove("bg-blue-600", "hover:bg-blue-700");
+                btn.classList.add("bg-gray-400", "cursor-not-allowed");
+            }
+        });
+
+        // Setelah tabel siap, preload semua gambar dari ujian yang sudah diunduh
+        preloadSemuaGambar();
+    });
+
+    /**
+     * Kirim hasil ujian ke server.
+     */
+    function kirimHasilUjian(button) {
+        const ujianId = button.getAttribute('data-ujian-id');
+        const jawabanDataRaw = localStorage.getItem(`jawaban_ujian_${ujianId}`);
+        const waktuMulaiRaw = localStorage.getItem(`ujian_${ujianId}_waktu_mulai`);
+        const soalRaw = localStorage.getItem(`ujian_${ujianId}_data`);
+
+        if (!jawabanDataRaw || !waktuMulaiRaw || !soalRaw) {
+            alert("❌ Data tidak lengkap. Tidak bisa mengirim hasil.");
             return;
         }
 
-        if (jawaban) {
-            btn.disabled = true;
-            btn.innerText = "✅ Sudah Dikerjakan";
-            btn.classList.remove("bg-blue-600", "hover:bg-blue-700");
-            btn.classList.add("bg-gray-400", "cursor-not-allowed");
+        let jawabanData;
+        try { jawabanData = JSON.parse(jawabanDataRaw); }
+        catch { alert("❌ Data jawaban corrupt."); return; }
+
+        const data = getSoalData(ujianId);
+        if (!data) {
+            alert("❌ Gagal dekripsi soal.");
+            return;
         }
-    });
-});
 
+        const jawabanUser = jawabanData.jawaban || {};
+        let jumlahBenar = 0;
 
-        function kirimHasilUjian(button) {
-            const ujianId = button.getAttribute('data-ujian-id');
-            const secretKey = 'kunc!_rahasia123';
-            const jawabanData = JSON.parse(localStorage.getItem(`jawaban_ujian_${ujianId}`));
-            const waktuMulai = new Date(localStorage.getItem(`ujian_${ujianId}_waktu_mulai`))
-                                  .toISOString().slice(0, 19).replace("T", " ");
-            const soalEncrypted = localStorage.getItem(`ujian_${ujianId}_data`);
+        (data.soal || []).forEach(item => {
+            const kunci = item.jawaban_benar?.toUpperCase();
+            const jawaban = jawabanUser[item.id];
+            if (jawaban && jawaban === kunci) jumlahBenar++;
+        });
 
-            if (!jawabanData || !waktuMulai || !soalEncrypted) {
-                alert("❌ Data tidak lengkap. Tidak bisa mengirim hasil.");
-                return;
-            }
+        const nilai = Math.round((jumlahBenar / (data.soal?.length || 1)) * 100);
+        const waktuMulai = new Date(waktuMulaiRaw).toISOString().slice(0, 19).replace("T", " ");
+        const waktuSelesai = new Date().toISOString().slice(0, 19).replace("T", " ");
 
-            let soalData;
-            try {
-                const decrypted = CryptoJS.AES.decrypt(soalEncrypted, secretKey).toString(CryptoJS.enc.Utf8);
-                soalData = JSON.parse(decrypted);
-            } catch (e) {
-                alert("❌ Gagal dekripsi soal.");
-                return;
-            }
-
-            const jawabanUser = jawabanData.jawaban;
-            let jumlahBenar = 0;
-
-            soalData.soal.forEach(item => {
-                const kunci = item.jawaban_benar?.toUpperCase();
-                const jawaban = jawabanUser[item.id];
-                if (jawaban && jawaban === kunci) jumlahBenar++;
-            });
-
-            const nilai = Math.round((jumlahBenar / soalData.soal.length) * 100);
-            const waktuSelesai = new Date().toISOString().slice(0, 19).replace("T", " ");
-
-            fetch("{{ route('siswa.submit-hasil') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    ujian_id: ujianId,
-                    nilai: nilai,
-                    waktu_mulai: waktuMulai,
-                    waktu_selesai: waktuSelesai
-                })
+        fetch("{{ route('siswa.submit-hasil') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                ujian_id: ujianId,
+                nilai: nilai,
+                waktu_mulai: waktuMulai,
+                waktu_selesai: waktuSelesai
             })
-            .then(res => res.json())
-            .then(res => {
-                if (res.status === 'success') {
-                    alert("✅ Nilai berhasil dikirim.");
-                    localStorage.removeItem(`ujian_${ujianId}_data`);
-                    localStorage.removeItem(`ujian_${ujianId}_waktu_mulai`);
-                    localStorage.removeItem(`ujian_${ujianId}_acak`);
-                    window.location.href = "/siswa/dashboard";
-                } else {
-                    alert("❌ Gagal mengirim: " + res.message);
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert("❌ Gagal mengirim data.");
-            });
-        }
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (res.status === 'success') {
+                alert("✅ Nilai berhasil dikirim.");
+                localStorage.removeItem(`ujian_${ujianId}_waktu_mulai`);
+                localStorage.removeItem(`ujian_${ujianId}_acak`);
+                window.location.href = "/siswa/dashboard";
+            } else {
+                alert("❌ Gagal mengirim: " + res.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("❌ Gagal mengirim data.");
+        });
+    }
     </script>
 
 </body>

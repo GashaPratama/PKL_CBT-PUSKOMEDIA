@@ -5,35 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulasi Ujian - {{ $exam->nama }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        const waktuMulaiKey = "simulasi_waktu_mulai_{{ $exam->id }}";
-        const waktuSekarang = Math.floor(Date.now() / 1000);
-        let waktuMulai = localStorage.getItem(waktuMulaiKey);
-
-        if (!waktuMulai) {
-            waktuMulai = waktuSekarang;
-            localStorage.setItem(waktuMulaiKey, waktuMulai);
-        } else {
-            waktuMulai = parseInt(waktuMulai);
-        }
-
-        const durasi = {{ $exam->durasi * 60 }};
-        let waktu = durasi - (waktuSekarang - waktuMulai);
-
-        function countdown() {
-            const timer = document.getElementById("timer");
-            let menit = Math.floor(waktu / 60);
-            let detik = waktu % 60;
-            timer.innerHTML = `${menit}m ${detik < 10 ? '0' : ''}${detik}s`;
-            if (waktu <= 0) {
-                alert("⏰ Waktu habis!");
-                submitFinal();
-            }
-            waktu--;
-        }
-
-        setInterval(countdown, 1000);
-    </script>
 </head>
 <body class="bg-gray-100 p-4 sm:p-6 font-sans">
 
@@ -79,6 +50,34 @@
 </div>
 
 <script>
+    const waktuMulaiKey = "simulasi_waktu_mulai_{{ $exam->id }}";
+    const waktuSekarang = Math.floor(Date.now() / 1000);
+    let waktuMulai = localStorage.getItem(waktuMulaiKey);
+
+    if (!waktuMulai) {
+        waktuMulai = waktuSekarang;
+        localStorage.setItem(waktuMulaiKey, waktuMulai);
+    } else {
+        waktuMulai = parseInt(waktuMulai);
+    }
+
+    const durasi = {{ $exam->durasi * 60 }};
+    let waktu = durasi - (waktuSekarang - waktuMulai);
+
+    function countdown() {
+        const timer = document.getElementById("timer");
+        let menit = Math.floor(waktu / 60);
+        let detik = waktu % 60;
+        timer.innerHTML = `${menit}m ${detik < 10 ? '0' : ''}${detik}s`;
+        if (waktu <= 0) {
+            alert("⏰ Waktu habis!");
+            submitFinal();
+        }
+        waktu--;
+    }
+
+    setInterval(countdown, 1000);
+
     function shuffle(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -118,7 +117,15 @@
         document.getElementById('soal-container').innerHTML = `
             <div class="p-4 bg-gray-50 rounded shadow text-sm sm:text-base">
                 <h3 class="font-semibold mb-2">Soal ${index + 1} dari ${soalList.length}:</h3>
+
+                ${soal.gambar ? `
+                    <div class="mb-3">
+                        <img src="/img/soal/${soal.gambar}" alt="Gambar Soal" class="rounded max-w-full max-h-64 object-contain border mb-2" />
+                    </div>
+                ` : ''}
+
                 <p class="mb-3">${soal.pertanyaan}</p>
+
                 <div class="space-y-2 ml-2">
                     ${soal.opsi_diacak.map(opt => `
                         <label class="block">
@@ -174,9 +181,7 @@
             hiddenContainer.appendChild(input);
         }
 
-        // 🧹 Hapus waktu mulai dari localStorage
         localStorage.removeItem("simulasi_waktu_mulai_{{ $exam->id }}");
-
         document.getElementById('form-simulasi').submit();
     }
 
@@ -219,5 +224,6 @@
     renderNavigation();
     renderSoal(currentIndex);
 </script>
+
 </body>
 </html>
