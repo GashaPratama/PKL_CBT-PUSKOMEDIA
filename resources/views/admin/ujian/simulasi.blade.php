@@ -8,6 +8,13 @@
 </head>
 <body class="bg-gray-100 p-4 sm:p-6 font-sans">
 
+<!-- Loader -->
+<div id="loading" class="hidden fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div class="bg-white px-4 py-2 rounded shadow text-sm text-gray-700">
+        ⏳ Menyimpan jawaban, mohon tunggu...
+    </div>
+</div>
+
 <div class="w-full max-w-5xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-md flex flex-col-reverse lg:flex-row gap-6">
 
     <!-- Bagian Soal -->
@@ -88,13 +95,14 @@
 
     let soalList = @json($exam->soals).map(soal => {
         const opsi = [];
-
         if (soal.opsi_a) opsi.push({ kode: 'A', teks: soal.opsi_a });
         if (soal.opsi_b) opsi.push({ kode: 'B', teks: soal.opsi_b });
         if (soal.opsi_c) opsi.push({ kode: 'C', teks: soal.opsi_c });
         if (soal.opsi_d) opsi.push({ kode: 'D', teks: soal.opsi_d });
         if (soal.opsi_e) opsi.push({ kode: 'E', teks: soal.opsi_e });
         if (soal.opsi_f) opsi.push({ kode: 'F', teks: soal.opsi_f });
+
+        if (opsi.length === 0) opsi.push({ kode: 'X', teks: '[Soal tanpa opsi]' });
 
         const jawabanBenarAsli = soal.jawaban_benar.toUpperCase();
         const isiJawabanBenar = opsi.find(o => o.kode === jawabanBenarAsli)?.teks;
@@ -130,16 +138,15 @@
                 <p class="mb-3">${soal.pertanyaan}</p>
 
                 <div class="space-y-2 ml-2">
-    ${soal.opsi_diacak.map(opt => `
-        <label class="block">
-            <input type="radio" name="radio_${soal.id}" value="${opt.kode}"
-                ${selected === opt.kode ? 'checked' : ''}
-                onchange="simpanJawaban(${soal.id}, '${opt.kode}')" class="mr-2">
-            ${opt.teks}
-        </label>
-    `).join('')}
-</div>
-
+                    ${soal.opsi_diacak.map(opt => `
+                        <label class="block">
+                            <input type="radio" name="radio_${soal.id}" value="${opt.kode}"
+                                ${selected === opt.kode ? 'checked' : ''}
+                                onchange="simpanJawaban(${soal.id}, '${opt.kode}')" class="mr-2">
+                            ${opt.teks}
+                        </label>
+                    `).join('')}
+                </div>
 
                 <input type="hidden" name="jawaban[${soal.id}]" id="jawaban_${soal.id}" value="${selected}">
             </div>
@@ -175,6 +182,11 @@
     }
 
     function submitFinal() {
+        const unanswered = soalList.filter(s => !jawabanSementara[s.id]);
+        if (unanswered.length > 0) {
+            if (!confirm(`Masih ada ${unanswered.length} soal yang belum dijawab. Yakin ingin mengakhiri simulasi?`)) return;
+        }
+
         const hiddenContainer = document.getElementById('hidden-inputs');
         hiddenContainer.innerHTML = '';
 
@@ -187,6 +199,7 @@
         }
 
         localStorage.removeItem("simulasi_waktu_mulai_{{ $exam->id }}");
+        document.getElementById('loading').classList.remove('hidden');
         document.getElementById('form-simulasi').submit();
     }
 

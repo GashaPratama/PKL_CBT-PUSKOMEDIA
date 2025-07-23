@@ -17,9 +17,6 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $kelasList = Kelas::all();
-        $rombelList = RombonganBelajar::with('kelas')->get();
-
         $query = User::with('rombonganBelajar.kelas')->where('role', 'siswa');
 
         if ($request->filled('kelas')) {
@@ -29,10 +26,15 @@ class UserController extends Controller
         }
 
         if ($request->filled('kelompok')) {
-            $query->where('rombongan_belajar_id', $request->kelompok);
+            $query->whereHas('rombonganBelajar', function ($q) use ($request) {
+                $q->where('id', $request->kelompok);
+            });
         }
 
         $users = $query->get();
+
+        $kelasList = \App\Models\Kelas::all();
+        $rombelList = \App\Models\RombonganBelajar::with('kelas')->get();
 
         return view('admin.user.index', compact('users', 'kelasList', 'rombelList'));
     }
