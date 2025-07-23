@@ -87,12 +87,15 @@
     }
 
     let soalList = @json($exam->soals).map(soal => {
-        const opsi = [
-            { kode: 'A', teks: soal.opsi_a },
-            { kode: 'B', teks: soal.opsi_b },
-            { kode: 'C', teks: soal.opsi_c },
-            { kode: 'D', teks: soal.opsi_d }
-        ];
+        const opsi = [];
+
+        if (soal.opsi_a) opsi.push({ kode: 'A', teks: soal.opsi_a });
+        if (soal.opsi_b) opsi.push({ kode: 'B', teks: soal.opsi_b });
+        if (soal.opsi_c) opsi.push({ kode: 'C', teks: soal.opsi_c });
+        if (soal.opsi_d) opsi.push({ kode: 'D', teks: soal.opsi_d });
+        if (soal.opsi_e) opsi.push({ kode: 'E', teks: soal.opsi_e });
+        if (soal.opsi_f) opsi.push({ kode: 'F', teks: soal.opsi_f });
+
         const jawabanBenarAsli = soal.jawaban_benar.toUpperCase();
         const isiJawabanBenar = opsi.find(o => o.kode === jawabanBenarAsli)?.teks;
         const opsiDiacak = shuffle(opsi);
@@ -127,15 +130,17 @@
                 <p class="mb-3">${soal.pertanyaan}</p>
 
                 <div class="space-y-2 ml-2">
-                    ${soal.opsi_diacak.map(opt => `
-                        <label class="block">
-                            <input type="radio" name="radio_${soal.id}" value="${opt.kode}"
-                            ${selected === opt.kode ? 'checked' : ''}
-                            onchange="simpanJawaban(${soal.id}, '${opt.kode}')">
-                            ${opt.kode}. ${opt.teks}
-                        </label>
-                    `).join('')}
-                </div>
+    ${soal.opsi_diacak.map(opt => `
+        <label class="block">
+            <input type="radio" name="radio_${soal.id}" value="${opt.kode}"
+                ${selected === opt.kode ? 'checked' : ''}
+                onchange="simpanJawaban(${soal.id}, '${opt.kode}')" class="mr-2">
+            ${opt.teks}
+        </label>
+    `).join('')}
+</div>
+
+
                 <input type="hidden" name="jawaban[${soal.id}]" id="jawaban_${soal.id}" value="${selected}">
             </div>
         `;

@@ -16,6 +16,8 @@ class Soal extends Model
         'opsi_b',
         'opsi_c',
         'opsi_d',
+        'opsi_e',
+        'opsi_f',
         'jawaban_benar',
         'gambar', 
     ];

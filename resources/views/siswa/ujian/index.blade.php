@@ -1,4 +1,4 @@
-<!-- ✅ UJIAN SISWA DENGAN GAMBAR -->
+<!-- ✅ UJIAN SISWA DENGAN GAMBAR - FIXED -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -83,27 +83,33 @@ try {
   if (!decryptedData || !decryptedData.soal || !Array.isArray(decryptedData.soal)) throw new Error();
 
   soalList = acakArray(decryptedData.soal.map(soal => {
-    const pilihan = acakArray([
-      { kode: 'A', teks: soal.opsi_a },
-      { kode: 'B', teks: soal.opsi_b },
-      { kode: 'C', teks: soal.opsi_c },
-      { kode: 'D', teks: soal.opsi_d }
-    ]);
-    const jawabanBenarIndex = pilihan.findIndex(p => p.teks === soal[`opsi_${soal.jawaban_benar.toLowerCase()}`]);
+  const pilihan = acakArray(
+    ['a', 'b', 'c', 'd', 'e', 'f']
+      .map((k, i) => ({
+        kode: String.fromCharCode(65 + i),
+        teks: soal[`opsi_${k}`]
+          ?.replace(/^\s*[A-Fa-f]\s*[\.\:\)]\s*/, '')  // 🔥 Bersihkan awalan huruf
+          ?.trim() || null
+      }))
+      .filter((item, index, self) =>
+        item.teks &&
+        self.findIndex(i => i.teks === item.teks) === index
+      )
+  );
+  return {
+    id: soal.id,
+    pertanyaan: soal.pertanyaan,
+    gambar: soal.gambar ?? null,
+    pilihan
+  };
+}));
 
-    return {
-      id: soal.id,
-      pertanyaan: soal.pertanyaan,
-      gambar: soal.gambar ?? null,
-      pilihan,
-      jawabanBenarIndex
-    };
-  }));
 
 } catch (e) {
   alert("❌ Gagal membaca soal. Data rusak atau kunci salah.");
   window.location.href = "/siswa/dashboard";
 }
+
 
 document.getElementById("namaUjian").textContent = "📘 Ujian: " + decryptedData.ujian.nama;
 
@@ -140,11 +146,11 @@ function renderSoal(index) {
   const selected = jawabanSementara[soal.id] || '';
   let pilihanHTML = '';
 
-  soal.pilihan.forEach(item => {
+  soal.pilihan.forEach((item, i) => {
     pilihanHTML += `
-      <label class="block">
-        <input type="radio" name="radio_${soal.id}" value="${item.kode}" ${selected === item.kode ? 'checked' : ''} onchange="simpanJawaban(${soal.id}, '${item.kode}')">
-        ${item.kode}. ${item.teks}
+      <label class="block cursor-pointer">
+        <input id="opsi_${soal.id}_${i}" type="radio" name="radio_${soal.id}" value="${item.kode}" ${selected === item.kode ? 'checked' : ''} onchange="simpanJawaban(${soal.id}, '${item.kode}')">
+        <span class="ml-2">${item.teks}</span>
       </label>`;
   });
 
@@ -157,6 +163,8 @@ function renderSoal(index) {
     </div>`;
   highlightNavigation();
 }
+
+
 
 function simpanJawaban(id, val) {
   jawabanSementara[id] = val;
