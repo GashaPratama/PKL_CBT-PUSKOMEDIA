@@ -65,6 +65,12 @@
                                     </button>
                                 </form>
 
+                                <!-- Edit User -->
+                                <a href="{{ route('admin.user.edit', $user->id_user) }}"
+                                    class="text-yellow-600 hover:underline text-sm">
+                                    ✏️ Edit
+                                </a>
+
                                 <!-- Hapus User -->
                                 <form action="{{ route('admin.user.destroy', $user->id_user) }}" method="POST" class="inline">
                                     @csrf
@@ -77,6 +83,7 @@
                                 </form>
 
                             </td>
+
                         </tr>
                     @endforeach
                 </tbody>

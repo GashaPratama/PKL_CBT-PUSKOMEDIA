@@ -6,38 +6,23 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Hash;
-use App\Exports\UserExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
-
-
+use App\Exports\UserExport;
 
 class UserController extends Controller
 {
-    public function create()
-    {
-        return view('admin.user.create');
-    }
-
     public function index()
     {
-        // Ambil semua user yang role-nya "siswa"
         $users = User::where('role', 'siswa')->get();
         return view('admin.user.index', compact('users'));
     }
 
-    public function import(Request $request)
+    public function create()
     {
-    $request->validate([
-        'file' => 'required|file|mimes:xlsx,xls'
-    ]);
-
-    Excel::import(new \App\Imports\UserImport, $request->file('file'));
-
-    return back()->with('success', 'Data pengguna berhasil diimpor.');
+        return view('admin.user.create');
     }
-
 
     public function store(Request $request)
     {
@@ -62,34 +47,67 @@ class UserController extends Controller
         return redirect()->route('admin.dashboard')->with('success', 'User berhasil ditambahkan');
     }
 
+    public function edit($id)
+    {
+        $user = User::findOrFail($id);
+        return view('admin.user.edit', compact('user'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'nama_lengkap' => 'required|string|max:255',
+            'email' => 'required|email|unique:user,email,' . $id . ',id_user',
+            'no_telpon' => 'nullable|string|max:20',
+        ]);
+
+        $user = User::findOrFail($id);
+        $user->update([
+            'nama_lengkap' => $request->nama_lengkap,
+            'email' => $request->email,
+            'no_telpon' => $request->no_telpon,
+        ]);
+
+        return redirect()->route('admin.user.show')->with('success', 'Data peserta berhasil diperbarui.');
+    }
+
     public function resetPassword($id)
     {
-    $user = User::findOrFail($id);
-    $user->password = Hash::make('password123'); // default baru
-    $user->save();
+        $user = User::findOrFail($id);
+        $user->password = Hash::make('password123');
+        $user->save();
 
-    return back()->with('success', 'Password berhasil direset ke "password123".');
-
-    
-    }      
+        return back()->with('success', 'Password berhasil direset ke "password123".');
+    }
 
     public function destroy($id)
     {
-    $user = User::findOrFail($id);
-    $user->delete();
+        $user = User::findOrFail($id);
+        $user->delete();
 
-    return back()->with('success', 'Pengguna berhasil dihapus.');
+        return back()->with('success', 'Pengguna berhasil dihapus.');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls'
+        ]);
+
+        Excel::import(new \App\Imports\UserImport, $request->file('file'));
+
+        return back()->with('success', 'Data pengguna berhasil diimpor.');
     }
 
     public function exportExcel()
     {
-    return Excel::download(new UserExport, 'data_peserta.xlsx');
+        return Excel::download(new UserExport, 'data_peserta.xlsx');
     }
 
     public function exportPdf()
     {
-    $users = User::all();
-    $pdf = Pdf::loadView('admin.exports.users-pdf', compact('users'));
-    return $pdf->download('data_peserta.pdf');
+        $users = User::all();
+        $pdf = Pdf::loadView('admin.exports.users-pdf', compact('users'));
+        return $pdf->download('data_peserta.pdf');
     }
 }

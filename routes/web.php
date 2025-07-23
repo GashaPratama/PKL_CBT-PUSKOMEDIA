@@ -14,6 +14,7 @@ use App\Http\Controllers\Siswa\UjianController;
 use App\Http\Controllers\Api\SoalDownloadController;
 use App\Http\Controllers\Siswa\SiswaController;
 
+
 // =======================
 // ROUTE PUBLIK
 // =======================
@@ -78,6 +79,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/user/destroy/{id}', [UserController::class, 'destroy'])->name('user.destroy');
     Route::get('/user/export/excel', [UserController::class, 'exportExcel'])->name('user.export.excel');
     Route::get('/user/export/pdf', [UserController::class, 'exportPdf'])->name('user.export.pdf');
+    Route::get('/user/{id}/edit', [UserController::class, 'edit'])->name('user.edit');
+    Route::put('/user/{id}', [UserController::class, 'update'])->name('user.update');
+
+
+
 
     // Soal
     Route::post('/soal/store', [SoalController::class, 'store'])->name('soal.store');
