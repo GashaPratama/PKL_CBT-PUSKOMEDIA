@@ -5,87 +5,95 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\RombonganBelajar;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\UserExport;
+use App\Imports\UserImport;
+use App\Models\Kelas;
 
 class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::where('role', 'siswa');
+        $kelasList = Kelas::all();
+        $rombelList = RombonganBelajar::with('kelas')->get();
 
-        
+        $query = User::with('rombonganBelajar.kelas')->where('role', 'siswa');
+
         if ($request->filled('kelas')) {
-            $query->where('kelas', $request->kelas);
+            $query->whereHas('rombonganBelajar.kelas', function ($q) use ($request) {
+                $q->where('id', $request->kelas);
+            });
         }
 
         if ($request->filled('kelompok')) {
-            $query->where('kelompok', $request->kelompok);
+            $query->where('rombongan_belajar_id', $request->kelompok);
         }
 
         $users = $query->get();
 
-        return view('admin.user.index', compact('users'));
+        return view('admin.user.index', compact('users', 'kelasList', 'rombelList'));
     }
-
 
     public function create()
     {
-        return view('admin.user.create');
+        $kelas = Kelas::all();
+        $rombels = RombonganBelajar::with('kelas')->get();
+        return view('admin.user.create', compact('kelas', 'rombels'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'nama_lengkap'   => 'required|string|max:255',
-            'email'          => 'required|email|unique:user,email',
-            'password'       => 'required|string|min:8',
-            'no_telpon'      => 'nullable|string|max:20',
-            'jenis_kelamin'  => 'required|in:Laki-laki,Perempuan',
-            'kelas'          => 'nullable|string|max:50',
-            'kelompok'       => 'nullable|string|max:50',
-            'role'           => 'required|in:siswa,admin',
+            'nama_lengkap'         => 'required|string|max:255',
+            'email'                => 'required|email|unique:user,email',
+            'password'             => 'required|string|min:8',
+            'no_telpon'            => 'nullable|string|max:20',
+            'jenis_kelamin'        => 'required|in:Laki-laki,Perempuan',
+            'rombongan_belajar_id' => 'required|exists:rombongan_belajar,id',
+            'role'                 => 'required|in:siswa,admin',
         ]);
 
         User::create([
-            'nama_lengkap'   => $request->nama_lengkap,
-            'email'          => $request->email,
-            'password'       => bcrypt($request->password),
-            'no_telpon'      => $request->no_telpon,
-            'jenis_kelamin'  => $request->jenis_kelamin,
-            'kelas'          => $request->kelas,
-            'kelompok'       => $request->kelompok,
-            'role'           => $request->role,
+            'nama_lengkap'         => $request->nama_lengkap,
+            'email'                => $request->email,
+            'password'             => Hash::make($request->password),
+            'no_telpon'            => $request->no_telpon,
+            'jenis_kelamin'        => $request->jenis_kelamin,
+            'rombongan_belajar_id' => $request->rombongan_belajar_id,
+            'role'                 => $request->role,
         ]);
 
-        return redirect()->route('admin.dashboard')->with('success', 'User berhasil ditambahkan');
+        return redirect()->route('admin.user.show')->with('success', 'Pengguna berhasil ditambahkan!');
     }
 
     public function edit($id)
     {
         $user = User::findOrFail($id);
-        return view('admin.user.edit', compact('user'));
+        $rombels = RombonganBelajar::with('kelas')->get();
+        return view('admin.user.edit', compact('user', 'rombels'));
     }
 
     public function update(Request $request, $id)
     {
+        $user = User::findOrFail($id);
+
         $request->validate([
-            'nama_lengkap'   => 'required|string|max:255',
-            'email'          => 'required|email|unique:user,email,' . $id . ',id_user',
-            'no_telpon'      => 'nullable|string|max:20',
-            'kelas'          => 'nullable|string|max:50',
-            'kelompok'       => 'nullable|string|max:50',
+            'nama_lengkap'         => 'required|string|max:255',
+            'email'                => 'required|email|unique:user,email,' . $id . ',id_user',
+            'no_telpon'            => 'nullable|string|max:20',
+            'jenis_kelamin'        => 'required|in:Laki-laki,Perempuan',
+            'rombongan_belajar_id' => 'required|exists:rombongan_belajar,id',
         ]);
 
-        $user = User::findOrFail($id);
         $user->update([
-            'nama_lengkap'   => $request->nama_lengkap,
-            'email'          => $request->email,
-            'no_telpon'      => $request->no_telpon,
-            'kelas'          => $request->kelas,
-            'kelompok'       => $request->kelompok,
+            'nama_lengkap'         => $request->nama_lengkap,
+            'email'                => $request->email,
+            'no_telpon'            => $request->no_telpon,
+            'jenis_kelamin'        => $request->jenis_kelamin,
+            'rombongan_belajar_id' => $request->rombongan_belajar_id,
         ]);
 
         return redirect()->route('admin.user.show')->with('success', 'Data peserta berhasil diperbarui.');
@@ -114,7 +122,7 @@ class UserController extends Controller
             'file' => 'required|file|mimes:xlsx,xls'
         ]);
 
-        Excel::import(new \App\Imports\UserImport, $request->file('file'));
+        Excel::import(new UserImport, $request->file('file'));
 
         return back()->with('success', 'Data pengguna berhasil diimpor.');
     }
@@ -126,7 +134,7 @@ class UserController extends Controller
 
     public function exportPdf()
     {
-        $users = User::all();
+        $users = User::with('rombonganBelajar.kelas')->where('role', 'siswa')->get();
         $pdf = Pdf::loadView('admin.exports.users-pdf', compact('users'));
         return $pdf->download('data_peserta.pdf');
     }

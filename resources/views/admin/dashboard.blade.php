@@ -43,7 +43,7 @@
         </div>
 
         <!-- Aksi Admin -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
             <div class="bg-white shadow rounded-lg p-4 flex justify-between items-center">
                 <span class="font-medium">Tambah Ujian</span>
                 <a href="{{ route('admin.ujian.create') }}" class="w-9 h-9 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xl">+</a>
@@ -55,6 +55,14 @@
             <div class="bg-white shadow rounded-lg p-4 flex justify-between items-center">
                 <span class="font-medium">Data Peserta</span>
                 <a href="{{ route('admin.user.show') }}" class="w-9 h-9 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xl">👁</a>
+            </div>
+            <div class="bg-white shadow rounded-lg p-4 flex justify-between items-center">
+                <span class="font-medium">Manajemen Kelas</span>
+                <a href="{{ route('admin.kelas.index') }}" class="w-9 h-9 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xl">📘</a>
+            </div>
+            <div class="bg-white shadow rounded-lg p-4 flex justify-between items-center">
+                <span class="font-medium">Manajemen Rombel</span>
+                <a href="{{ route('admin.rombel.index') }}" class="w-9 h-9 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xl">👥</a>
             </div>
         </div>
 

@@ -13,6 +13,8 @@ use App\Http\Controllers\Siswa\DashboardSiswaController;
 use App\Http\Controllers\Siswa\UjianController;
 use App\Http\Controllers\Api\SoalDownloadController;
 use App\Http\Controllers\Siswa\SiswaController;
+use App\Http\Controllers\Admin\KelasController;
+use App\Http\Controllers\Admin\RombelController;
 
 
 // =======================
@@ -82,8 +84,15 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/user/{id}/edit', [UserController::class, 'edit'])->name('user.edit');
     Route::put('/user/{id}', [UserController::class, 'update'])->name('user.update');
 
+    // Manajemen Kelas
+    Route::get('/kelas', [KelasController::class, 'index'])->name('kelas.index');
+    Route::post('/kelas', [KelasController::class, 'store'])->name('kelas.store');
+    Route::delete('/kelas/{id}', [KelasController::class, 'destroy'])->name('kelas.destroy');
 
-
+    // Manajemen Rombongan Belajar
+    Route::get('/rombel', [RombelController::class, 'index'])->name('rombel.index');
+    Route::post('/rombel', [RombelController::class, 'store'])->name('rombel.store');
+    Route::delete('/rombel/{id}', [RombelController::class, 'destroy'])->name('rombel.destroy');
 
     // Soal
     Route::post('/soal/store', [SoalController::class, 'store'])->name('soal.store');

@@ -1,109 +1,135 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah User</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tambah User</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-4 sm:p-6">
+<body class="bg-gray-100 p-6">
+  <div class="max-w-2xl mx-auto bg-white p-6 shadow rounded-lg">
+    <h2 class="text-2xl font-bold mb-4 text-gray-800">Tambah Pengguna Baru</h2>
 
-    <div class="max-w-2xl mx-auto bg-white p-6 sm:p-8 shadow-md rounded-xl">
+    {{-- Tampilkan Error --}}
+    @if($errors->any())
+      <div class="mb-4 p-4 bg-red-100 text-red-700 rounded">
+        <ul class="list-disc pl-5 text-sm">
+          @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+          @endforeach
+        </ul>
+      </div>
+    @endif
 
-        <h2 class="text-2xl font-bold mb-4 text-gray-800">Tambah Pengguna Baru</h2>
+    {{-- Form Tambah Manual --}}
+    <form method="POST" action="{{ route('admin.user.store') }}" class="space-y-4 mb-10">
+      @csrf
 
-        {{-- Tampilkan error validasi --}}
-        @if($errors->any())
-            <div class="mb-6 p-4 bg-red-100 text-red-600 rounded-lg">
-                <ul class="list-disc pl-5 text-sm">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+      <div>
+        <label class="block text-sm font-medium mb-1">Nama Lengkap</label>
+        <input type="text" name="nama_lengkap" value="{{ old('nama_lengkap') }}" required class="w-full border p-2 rounded">
+      </div>
 
-        {{-- Form Tambah User Manual --}}
-        <form method="POST" action="{{ route('admin.user.store') }}" class="space-y-4">
-            @csrf
+      <div>
+        <label class="block text-sm font-medium mb-1">Email</label>
+        <input type="email" name="email" value="{{ old('email') }}" required class="w-full border p-2 rounded">
+      </div>
 
-            <div>
-                <label class="block mb-1 font-medium text-sm">Nama Lengkap</label>
-                <input type="text" name="nama_lengkap" class="w-full border p-2 rounded" value="{{ old('nama_lengkap') }}" required>
-            </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Password</label>
+        <input type="password" name="password" required class="w-full border p-2 rounded">
+      </div>
 
-            <div>
-                <label class="block mb-1 font-medium text-sm">Email</label>
-                <input type="email" name="email" class="w-full border p-2 rounded" value="{{ old('email') }}" required>
-            </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">No Telpon</label>
+        <input type="text" name="no_telpon" value="{{ old('no_telpon') }}" class="w-full border p-2 rounded">
+      </div>
 
-            <div>
-                <label class="block mb-1 font-medium text-sm">Password</label>
-                <input type="password" name="password" class="w-full border p-2 rounded" required>
-            </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Jenis Kelamin</label>
+        <select name="jenis_kelamin" required class="w-full border p-2 rounded">
+          <option value="Laki-laki" {{ old('jenis_kelamin') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+          <option value="Perempuan" {{ old('jenis_kelamin') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+        </select>
+      </div>
 
-            <div>
-                <label class="block mb-1 font-medium text-sm">No Telpon</label>
-                <input type="text" name="no_telpon" class="w-full border p-2 rounded" value="{{ old('no_telpon') }}">
-            </div>
+      {{-- Dropdown Kelas --}}
+      <div>
+        <label class="block text-sm font-medium mb-1">Kelas</label>
+        <select id="kelasSelect" required class="w-full border p-2 rounded">
+          <option value="" disabled selected>-- Pilih Kelas --</option>
+          @foreach ($kelas as $k)
+            <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
+          @endforeach
+        </select>
+      </div>
 
-            <div>
-                <label class="block mb-1 font-medium text-sm">Jenis Kelamin</label>
-                <select name="jenis_kelamin" class="w-full border p-2 rounded" required>
-                    <option value="Laki-laki" {{ old('jenis_kelamin') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
-                    <option value="Perempuan" {{ old('jenis_kelamin') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
-                </select>
-            </div>
+      {{-- Dropdown Rombongan Belajar --}}
+      <div>
+        <label class="block text-sm font-medium mb-1">Rombongan Belajar</label>
+        <select name="rombongan_belajar_id" id="rombelSelect" required class="w-full border p-2 rounded">
+          <option value="" disabled selected>-- Pilih Rombel --</option>
+        </select>
+      </div>
 
-            <div>
-                <label class="block mb-1 font-medium text-sm">Kelas</label>
-                <input type="text" name="kelas" class="w-full border p-2 rounded" value="{{ old('kelas') }}" placeholder="Contoh: 10" required>
-            </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Role</label>
+        <select name="role" required class="w-full border p-2 rounded">
+          <option value="siswa" {{ old('role') == 'siswa' ? 'selected' : '' }}>Siswa</option>
+          <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+        </select>
+      </div>
 
-            <div>
-                <label class="block mb-1 font-medium text-sm">Kelompok Belajar</label>
-                <input type="text" name="kelompok" class="w-full border p-2 rounded" value="{{ old('kelompok') }}" placeholder="Contoh: A" required>
-            </div>
+      <div class="pt-2">
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          Simpan
+        </button>
+      </div>
+    </form>
 
-            <div>
-                <label class="block mb-1 font-medium text-sm">Role</label>
-                <select name="role" class="w-full border p-2 rounded" required>
-                    <option value="" disabled selected>Pilih Role</option>
-                    <option value="siswa" {{ old('role') == 'siswa' ? 'selected' : '' }}>Siswa</option>
-                    <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
-                </select>
-            </div>
+    {{-- Divider --}}
+    <div class="my-6 border-t"></div>
 
-            <div class="pt-2">
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                    Simpan
-                </button>
-            </div>
-        </form>
+    {{-- Form Upload Excel --}}
+    <h3 class="text-lg font-bold mb-4 text-gray-800">Import Pengguna dari Excel</h3>
+    <form method="POST" action="{{ route('admin.user.import') }}" enctype="multipart/form-data" class="space-y-4">
+      @csrf
+      <div>
+        <label class="block text-sm font-medium mb-1">Upload File (.xlsx)</label>
+        <input type="file" name="file" accept=".xlsx,.xls" class="w-full border p-2 rounded" required>
+      </div>
 
-        {{-- Divider --}}
-        <div class="my-8 border-t"></div>
+      <div class="flex items-center gap-3">
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+          Import Excel
+        </button>
+        <a href="{{ asset('files/template_user.xlsx') }}" download class="text-sm text-blue-600 underline">
+          Download Template
+        </a>
+      </div>
+    </form>
+  </div>
 
-        {{-- Form Upload Excel --}}
-        <h3 class="text-lg font-bold mb-4 text-gray-800">Import Pengguna dari Excel</h3>
-        <form method="POST" action="{{ route('admin.user.import') }}" enctype="multipart/form-data" class="space-y-4">
-            @csrf
-            <div>
-                <label class="block mb-1 font-medium text-sm">Upload File (.xlsx)</label>
-                <input type="file" name="file" accept=".xlsx,.xls" class="w-full border p-2 rounded" required>
-            </div>
+  {{-- Script untuk filter rombel berdasarkan kelas --}}
+  <script>
+    const rombels = @json($rombels); // dikirim dari controller
 
-            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-                    Import Excel
-                </button>
-                <a href="{{ asset('files/template_user.xlsx') }}" download class="text-sm text-blue-600 underline">
-                    Download Template
-                </a>
-            </div>
-        </form>
+    const kelasSelect = document.getElementById('kelasSelect');
+    const rombelSelect = document.getElementById('rombelSelect');
 
-    </div>
+    kelasSelect.addEventListener('change', function () {
+      const selectedKelasId = this.value;
+      rombelSelect.innerHTML = '<option value="" disabled selected>-- Pilih Rombel --</option>';
 
+      rombels.forEach(r => {
+        if (r.kelas_id == selectedKelasId) {
+          const option = document.createElement('option');
+          option.value = r.id;
+          option.textContent = r.kelas.nama_kelas + ' - Kelompok ' + r.nama_kelompok;
+          rombelSelect.appendChild(option);
+        }
+      });
+    });
+  </script>
 </body>
 </html>

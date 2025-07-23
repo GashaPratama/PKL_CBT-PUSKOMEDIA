@@ -29,14 +29,28 @@
         <form method="GET" action="{{ route('admin.user.show') }}" class="mb-4 flex flex-wrap gap-3 items-end">
             <div>
                 <label class="block text-sm font-medium">Kelas</label>
-                <input type="text" name="kelas" value="{{ request('kelas') }}"
-                       class="border rounded px-2 py-1 text-sm w-40" placeholder="Contoh: 10">
+                <select name="kelas" class="border rounded px-2 py-1 text-sm w-40">
+                    <option value="">-- Semua --</option>
+                    @foreach($kelasList as $kelas)
+                        <option value="{{ $kelas->id }}" {{ request('kelas') == $kelas->id ? 'selected' : '' }}>
+                            {{ $kelas->nama_kelas }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
+
             <div>
                 <label class="block text-sm font-medium">Kelompok</label>
-                <input type="text" name="kelompok" value="{{ request('kelompok') }}"
-                       class="border rounded px-2 py-1 text-sm w-40" placeholder="Contoh: A">
+                <select name="kelompok" class="border rounded px-2 py-1 text-sm w-40">
+                    <option value="">-- Semua --</option>
+                    @foreach($rombelList as $rombel)
+                        <option value="{{ $rombel->id }}" {{ request('kelompok') == $rombel->id ? 'selected' : '' }}>
+                            {{ $rombel->nama_kelompok }} ({{ $rombel->kelas->nama_kelas }})
+                        </option>
+                    @endforeach
+                </select>
             </div>
+
             <button type="submit"
                     class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm mt-1 sm:mt-0">
                 🔍 Filter
@@ -75,8 +89,12 @@
                             <td class="p-2">{{ $user->email }}</td>
                             <td class="p-2">{{ $user->no_telpon }}</td>
                             <td class="p-2">{{ $user->jenis_kelamin }}</td>
-                            <td class="p-2">{{ $user->kelas ?? '-' }}</td>
-                            <td class="p-2">{{ $user->kelompok ?? '-' }}</td>
+                            <td class="p-2">
+                                {{ $user->rombonganBelajar->kelas->nama_kelas ?? '-' }}
+                            </td>
+                            <td class="p-2">
+                                {{ $user->rombonganBelajar->nama_kelompok ?? '-' }}
+                            </td>
                             <td class="p-2 space-y-1 sm:space-y-0 sm:space-x-2 flex flex-col sm:flex-row">
                                 <form action="{{ route('admin.user.reset', $user->id_user) }}" method="POST" class="inline">
                                     @csrf
