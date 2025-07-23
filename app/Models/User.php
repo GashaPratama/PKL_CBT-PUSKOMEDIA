@@ -23,5 +23,7 @@ class User extends Authenticatable
         'no_telpon',
         'jenis_kelamin',
         'role',
+        'kelas',
+        'kelompok',
     ];
 }

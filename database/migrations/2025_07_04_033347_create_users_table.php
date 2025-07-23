@@ -16,6 +16,8 @@ class CreateUsersTable extends Migration
             $table->string('no_telpon', 20);
             $table->enum('jenis_kelamin', ['Laki-laki', 'Perempuan']);
             $table->enum('role', ['admin', 'siswa'])->default('siswa');
+            $table->string('kelas')->nullable();
+            $table->string('kelompok')->nullable();
             $table->timestamps();
         });
     }

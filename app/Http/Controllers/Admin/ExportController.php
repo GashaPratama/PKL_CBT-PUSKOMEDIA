@@ -14,17 +14,24 @@ use Maatwebsite\Excel\Facades\Excel;
 class ExportController extends Controller
 {
     public function exportPdf($id)
-{
-    $ujian = Ujian::with('hasilUjian.user')->findOrFail($id);
+    {
+        $ujian = Ujian::with('hasilUjian.user')->findOrFail($id);
 
-    // Ambil daftar user dari hasil ujian
-    $users = $ujian->hasilUjian->map(function ($hasil) {
-        return $hasil->user;
-    });
+        // Ambil daftar user dari hasil ujian
+        $users = $ujian->hasilUjian->map(function ($hasil) {
+            return $hasil->user;
+        });
 
-    $pdf = PDF::loadView('admin.ujian.export-pdf', compact('users'));
+        $pdf = PDF::loadView('admin.ujian.export-pdf', compact('users'));
 
-    return $pdf->download('hasil_ujian.pdf');
-}
+        return $pdf->download('hasil_ujian.pdf');
+    }
+
+    public function exportExcel($id)
+    {
+        $ujian = Ujian::findOrFail($id);
+        return Excel::download(new HasilUjianExport($id), 'hasil_ujian_' . $ujian->nama . '.xlsx');
+    }
+
 
 }

@@ -50,9 +50,19 @@
             <div>
                 <label class="block mb-1 font-medium text-sm">Jenis Kelamin</label>
                 <select name="jenis_kelamin" class="w-full border p-2 rounded" required>
-                    <option value="Laki-laki">Laki-laki</option>
-                    <option value="Perempuan">Perempuan</option>
+                    <option value="Laki-laki" {{ old('jenis_kelamin') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                    <option value="Perempuan" {{ old('jenis_kelamin') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
                 </select>
+            </div>
+
+            <div>
+                <label class="block mb-1 font-medium text-sm">Kelas</label>
+                <input type="text" name="kelas" class="w-full border p-2 rounded" value="{{ old('kelas') }}" placeholder="Contoh: 10" required>
+            </div>
+
+            <div>
+                <label class="block mb-1 font-medium text-sm">Kelompok Belajar</label>
+                <input type="text" name="kelompok" class="w-full border p-2 rounded" value="{{ old('kelompok') }}" placeholder="Contoh: A" required>
             </div>
 
             <div>

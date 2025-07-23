@@ -25,6 +25,26 @@
             </div>
         </div>
 
+        <!-- Filter Kelas dan Kelompok -->
+        <form method="GET" action="{{ route('admin.user.show') }}" class="mb-4 flex flex-wrap gap-3 items-end">
+            <div>
+                <label class="block text-sm font-medium">Kelas</label>
+                <input type="text" name="kelas" value="{{ request('kelas') }}"
+                       class="border rounded px-2 py-1 text-sm w-40" placeholder="Contoh: 10">
+            </div>
+            <div>
+                <label class="block text-sm font-medium">Kelompok</label>
+                <input type="text" name="kelompok" value="{{ request('kelompok') }}"
+                       class="border rounded px-2 py-1 text-sm w-40" placeholder="Contoh: A">
+            </div>
+            <button type="submit"
+                    class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm mt-1 sm:mt-0">
+                🔍 Filter
+            </button>
+            <a href="{{ route('admin.user.show') }}"
+               class="text-gray-600 hover:underline text-sm mt-1 sm:mt-0">🔄 Reset</a>
+        </form>
+
         <!-- Notifikasi sukses -->
         @if(session('success'))
             <div class="mb-4 p-3 bg-green-100 text-green-700 rounded text-sm">
@@ -42,54 +62,59 @@
                         <th class="p-2 border">Email</th>
                         <th class="p-2 border">No Telpon</th>
                         <th class="p-2 border">Jenis Kelamin</th>
+                        <th class="p-2 border">Kelas</th>
+                        <th class="p-2 border">Kelompok</th>
                         <th class="p-2 border">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($users as $index => $user)
+                    @forelse($users as $index => $user)
                         <tr class="border-t hover:bg-gray-50">
                             <td class="p-2">{{ $index + 1 }}</td>
                             <td class="p-2">{{ $user->nama_lengkap }}</td>
                             <td class="p-2">{{ $user->email }}</td>
                             <td class="p-2">{{ $user->no_telpon }}</td>
                             <td class="p-2">{{ $user->jenis_kelamin }}</td>
+                            <td class="p-2">{{ $user->kelas ?? '-' }}</td>
+                            <td class="p-2">{{ $user->kelompok ?? '-' }}</td>
                             <td class="p-2 space-y-1 sm:space-y-0 sm:space-x-2 flex flex-col sm:flex-row">
-
-                                <!-- Reset Password -->
                                 <form action="{{ route('admin.user.reset', $user->id_user) }}" method="POST" class="inline">
                                     @csrf
                                     <button type="submit"
-                                        onclick="return confirm('Reset password untuk {{ $user->nama_lengkap }} ke default?')"
-                                        class="text-blue-600 hover:underline text-sm">
+                                            onclick="return confirm('Reset password untuk {{ $user->nama_lengkap }} ke default?')"
+                                            class="text-blue-600 hover:underline text-sm">
                                         🔁 Reset
                                     </button>
                                 </form>
 
-                                <!-- Edit User -->
                                 <a href="{{ route('admin.user.edit', $user->id_user) }}"
-                                    class="text-yellow-600 hover:underline text-sm">
+                                   class="text-yellow-600 hover:underline text-sm">
                                     ✏️ Edit
                                 </a>
 
-                                <!-- Hapus User -->
                                 <form action="{{ route('admin.user.destroy', $user->id_user) }}" method="POST" class="inline">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"
-                                        onclick="return confirm('Yakin ingin menghapus {{ $user->nama_lengkap }}?')"
-                                        class="text-red-600 hover:underline text-sm">
+                                            onclick="return confirm('Yakin ingin menghapus {{ $user->nama_lengkap }}?')"
+                                            class="text-red-600 hover:underline text-sm">
                                         🗑 Hapus
                                     </button>
                                 </form>
-
                             </td>
-
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr><td colspan="8" class="p-3 text-center text-gray-500">Tidak ada data peserta.</td></tr>
+                    @endforelse
                 </tbody>
             </table>
-        </div>
 
+            <a href="{{ route('admin.dashboard') }}"
+               class="text-sm text-gray-600 hover:underline mt-4 inline-block">
+                ← Kembali
+            </a>
+        </div>
     </div>
+
 </body>
 </html>

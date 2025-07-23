@@ -14,17 +14,23 @@ class UserImport implements ToCollection
         $rows->shift(); // Skip header
 
         foreach ($rows as $row) {
-         if (!empty($row[0]) && !empty($row[1]) && !empty($row[2]) && !empty($row[4]) && !empty($row[5])) {
-        User::create([
-            'nama_lengkap' => $row[0],
-            'email' => $row[1],
-            'password' => Hash::make($row[2]),
-            'no_telpon' => $row[3] ?? null,
-            'jenis_kelamin' => $row[4],
-            'role' => $row[5],
-        ]);
-    }
-}
+            if (!empty($row[0]) && !empty($row[1]) && !empty($row[2]) && !empty($row[4]) && !empty($row[5])) {
+                // Cek apakah email sudah ada
+                if (User::where('email', $row[1])->exists()) {
+                    continue; // skip jika email sudah ada
+                }
 
+                User::create([
+                    'nama_lengkap' => $row[0],
+                    'email' => $row[1],
+                    'password' => Hash::make($row[2]),
+                    'no_telpon' => $row[3] ?? null,
+                    'jenis_kelamin' => $row[4],
+                    'role' => $row[5],
+                    'kelas' => $row[6] ?? null,
+                    'kelompok' => $row[7] ?? null,
+                ]);
+            }
+        }
     }
 }

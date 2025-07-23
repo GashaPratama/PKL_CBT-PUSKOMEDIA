@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\HasilUjian;
+use App\Models\Ujian;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
