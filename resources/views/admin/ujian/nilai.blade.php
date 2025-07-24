@@ -8,8 +8,8 @@
 </head>
 <body class="bg-gray-100 min-h-screen p-4 sm:p-6">
 
-    <div class="max-w-4xl mx-auto bg-white p-6 sm:p-8 rounded-xl shadow">
-        <h1 class="text-2xl font-bold mb-6 text-gray-800">Nilai Peserta: {{ $exam->nama }}</h1>
+    <div class="max-w-6xl mx-auto bg-white p-6 sm:p-8 rounded-xl shadow">
+        <h1 class="text-2xl font-bold mb-6 text-gray-800">📊 Nilai Peserta: {{ $exam->nama }}</h1>
 
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white border border-gray-200 text-sm sm:text-base">
@@ -18,6 +18,8 @@
                         <th class="px-4 py-2 border text-left">#</th>
                         <th class="px-4 py-2 border text-left">Nama Peserta</th>
                         <th class="px-4 py-2 border text-left">Email</th>
+                        <th class="px-4 py-2 border text-left">Kelas</th>
+                        <th class="px-4 py-2 border text-left">Kelompok</th>
                         <th class="px-4 py-2 border text-center">Nilai</th>
                     </tr>
                 </thead>
@@ -27,11 +29,17 @@
                             <td class="px-4 py-2 border">{{ $index + 1 }}</td>
                             <td class="px-4 py-2 border">{{ $hasil->user?->nama_lengkap ?? '-' }}</td>
                             <td class="px-4 py-2 border">{{ $hasil->user?->email ?? '-' }}</td>
+                            <td class="px-4 py-2 border">
+                                {{ $hasil->user?->rombonganBelajar?->kelas?->nama_kelas ?? '-' }}
+                            </td>
+                            <td class="px-4 py-2 border">
+                                {{ $hasil->user?->rombonganBelajar?->nama_kelompok ?? '-' }}
+                            </td>
                             <td class="px-4 py-2 border text-center">{{ $hasil->nilai ?? '-' }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="text-center p-4 text-gray-500">Belum ada nilai peserta.</td>
+                            <td colspan="6" class="text-center p-4 text-gray-500">Belum ada nilai peserta.</td>
                         </tr>
                     @endforelse
                 </tbody>

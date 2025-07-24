@@ -9,13 +9,13 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SoalController;
 use App\Http\Controllers\Admin\SoalImportController;
 use App\Http\Controllers\Admin\ExportController;
-use App\Http\Controllers\Siswa\DashboardSiswaController;
-use App\Http\Controllers\Siswa\UjianController;
-use App\Http\Controllers\Api\SoalDownloadController;
-use App\Http\Controllers\Siswa\SiswaController;
 use App\Http\Controllers\Admin\KelasController;
 use App\Http\Controllers\Admin\RombelController;
-
+use App\Http\Controllers\Siswa\DashboardSiswaController;
+use App\Http\Controllers\Siswa\UjianController;
+use App\Http\Controllers\Siswa\SiswaController;
+use App\Http\Controllers\Api\SoalDownloadController;
+use App\Http\Controllers\GambarController;
 
 // =======================
 // ROUTE PUBLIK
@@ -34,15 +34,14 @@ Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->grou
     Route::get('/dashboard', [DashboardSiswaController::class, 'index'])->name('dashboard');
     Route::get('/ujian/{id}', [UjianController::class, 'index'])->name('ujian');
     Route::get('/siswa/ujian/{id}', [UjianController::class, 'index'])->name('siswa.ujian');
-    // Bisa ditambah: download soal, submit jawaban, simpan localStorage
 });
 
-Route::prefix('siswa')->middleware('auth')->group(function () {
+Route::middleware('auth')->prefix('siswa')->group(function () {
     Route::post('/submit-hasil', [SiswaController::class, 'submitHasil'])->name('siswa.submit-hasil');
 });
 
 // =======================
-// ROUTE SISWA PREFIX API
+// ROUTE API (SISWA)
 // =======================
 Route::middleware(['auth', 'role:siswa'])->prefix('api')->group(function () {
     Route::get('/ujian/{id}/soal', [SoalDownloadController::class, 'getSoal']);
@@ -52,25 +51,28 @@ Route::middleware(['auth', 'role:siswa'])->prefix('api')->group(function () {
 // ROUTE ADMIN
 // =======================
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+
     // Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-    // Ujian
+    // Upload Gambar (diletakkan sebelum route dinamis {id})
+    Route::get('/ujian/gambar', [GambarController::class, 'formUpload'])->name('gambar.form');
+    Route::post('/ujian/upload-gambar', [GambarController::class, 'uploadGambar'])->name('upload.gambar');
+
+    // Manajemen Ujian
     Route::get('/ujian/create', [ExamController::class, 'create'])->name('ujian.create');
     Route::post('/ujian/store', [ExamController::class, 'store'])->name('ujian.store');
     Route::get('/ujian/{id}/edit', [ExamController::class, 'edit'])->name('ujian.edit');
     Route::put('/ujian/{id}', [ExamController::class, 'update'])->name('ujian.update');
     Route::delete('/ujian/{id}', [ExamController::class, 'destroy'])->name('ujian.destroy');
-    Route::get('/ujian/{id}', [ExamController::class, 'show'])->name('ujian.detail');
     Route::get('/ujian/{id}/nilai', [ExamController::class, 'nilai'])->name('nilai.show');
-
-    // Export
-    Route::get('/ujian/{id}/unduh-excel', [ExportController::class, 'exportExcel'])->name('ujian.export.excel');
-    Route::get('/ujian/{id}/unduh-pdf', [ExportController::class, 'exportPdf'])->name('ujian.export.pdf');
-
-    // Simulasi Admin
     Route::get('/ujian/{id}/simulasi', [ExamController::class, 'simulasi'])->name('ujian.simulasi');
     Route::post('/ujian/{id}/simulasi/submit', [ExamController::class, 'submitSimulasi'])->name('ujian.simulasi.submit');
+    Route::get('/ujian/{id}/unduh-excel', [ExportController::class, 'exportExcel'])->name('ujian.export.excel');
+    Route::get('/ujian/{id}/unduh-pdf', [ExportController::class, 'exportPdf'])->name('ujian.export.pdf');
+    Route::get('/ujian/{id}', [ExamController::class, 'show'])
+        ->where('id', '[0-9]+') 
+        ->name('ujian.detail');
 
     // Manajemen Peserta
     Route::get('/user', [UserController::class, 'index'])->name('user.show');
@@ -101,6 +103,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 
 // =======================
-// LOGOUT (umum)
+// LOGOUT (UMUM)
 // =======================
 Route::middleware('auth')->post('/logout', [LoginController::class, 'logout'])->name('logout');
