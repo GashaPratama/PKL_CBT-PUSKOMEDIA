@@ -9,6 +9,13 @@ use App\Models\Soal;
 
 class ExamController extends Controller
 {
+
+    public function index()
+    {
+        $ujians = Ujian::orderBy('tanggal', 'desc')->paginate(10);
+        return view('admin.ujian.index', compact('ujians'));
+    }
+
     public function create()
     {
         return view('admin.ujian.create');

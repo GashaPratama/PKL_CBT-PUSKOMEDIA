@@ -16,6 +16,8 @@ use App\Http\Controllers\Siswa\UjianController;
 use App\Http\Controllers\Siswa\SiswaController;
 use App\Http\Controllers\Api\SoalDownloadController;
 use App\Http\Controllers\GambarController;
+use App\Http\Controllers\Admin\PengaturanController;
+
 
 // =======================
 // ROUTE PUBLIK
@@ -55,11 +57,15 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-    // Upload Gambar (diletakkan sebelum route dinamis {id})
+    // Upload Gambar Soal
     Route::get('/ujian/gambar', [GambarController::class, 'formUpload'])->name('gambar.form');
     Route::post('/ujian/upload-gambar', [GambarController::class, 'uploadGambar'])->name('upload.gambar');
 
+    // Upload Logo Login
+    Route::post('/upload-logo-login', [PengaturanController::class, 'uploadLogoLogin'])->name('uploadLogoLogin');
+
     // Manajemen Ujian
+    Route::get('/daftar-ujian', [ExamController::class, 'index'])->name('ujian.index');
     Route::get('/ujian/create', [ExamController::class, 'create'])->name('ujian.create');
     Route::post('/ujian/store', [ExamController::class, 'store'])->name('ujian.store');
     Route::get('/ujian/{id}/edit', [ExamController::class, 'edit'])->name('ujian.edit');
@@ -71,7 +77,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/ujian/{id}/unduh-excel', [ExportController::class, 'exportExcel'])->name('ujian.export.excel');
     Route::get('/ujian/{id}/unduh-pdf', [ExportController::class, 'exportPdf'])->name('ujian.export.pdf');
     Route::get('/ujian/{id}', [ExamController::class, 'show'])
-        ->where('id', '[0-9]+') 
+        ->where('id', '[0-9]+')
         ->name('ujian.detail');
 
     // Manajemen Peserta
@@ -101,6 +107,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/soal/import', [SoalImportController::class, 'import'])->name('soal.import');
     Route::post('/soal/bulk-delete', [SoalController::class, 'bulkDelete'])->name('soal.bulkDelete');
 });
+
 
 // =======================
 // LOGOUT (UMUM)

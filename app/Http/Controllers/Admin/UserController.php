@@ -31,7 +31,11 @@ class UserController extends Controller
             });
         }
 
-        $users = $query->get();
+        // PAGINASI - tampilkan 10 per halaman
+        $users = $query->paginate(10);
+
+        // Agar filter tetap saat pindah halaman
+        $users->appends($request->all());
 
         $kelasList = \App\Models\Kelas::all();
         $rombelList = \App\Models\RombonganBelajar::with('kelas')->get();

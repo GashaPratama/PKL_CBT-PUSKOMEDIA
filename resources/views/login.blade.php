@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CBT PUSKOMEDIA - Login</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     @if(session('error'))
@@ -25,7 +24,12 @@
     @endif
 </head>
 <body class="min-h-screen flex flex-col justify-between bg-gray-100 font-sans">
-    
+
+    @php
+        use Illuminate\Support\Facades\DB;
+        $logoLogin = DB::table('settings')->where('nama_konfigurasi', 'logo_login')->value('nilai') ?? 'img/login1.png';
+    @endphp
+
     <div class="flex flex-1">
         <div class="flex-1 flex flex-col justify-center p-10">
             <h1 class="text-2xl font-bold mb-4">Sistem Ujian Sekolah</h1>
@@ -42,7 +46,7 @@
         </div>
 
         <div class="hidden md:flex flex-1 justify-center items-center">
-            <img src="img/login1.png" alt="Login Image" class="w-1/2 rounded-lg">
+            <img src="{{ asset('storage/' . $logoLogin) }}" alt="Login Image" class="w-1/2 rounded-lg">
         </div>
     </div>
 
