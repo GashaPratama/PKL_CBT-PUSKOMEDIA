@@ -5,10 +5,13 @@
         <!-- Header -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
             <h2 class="text-2xl font-bold text-gray-800">📘 Daftar Ujian</h2>
-            <a href="{{ route('admin.ujian.create') }}"
-               class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow transition">
-                ➕ Tambah Ujian
-            </a>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('admin.ujian.create') }}"
+                   class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow transition">
+                    ➕ Tambah Ujian
+                </a>
+                
+            </div>
         </div>
 
         <!-- Notifikasi -->
@@ -69,6 +72,7 @@
         <!-- Navigasi Pagination -->
         <div class="mt-6">
             {{ $ujians->appends(request()->query())->links('vendor.pagination.tailwind') }}
+            
         </div>
 
     </div>

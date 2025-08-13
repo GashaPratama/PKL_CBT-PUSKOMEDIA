@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ $title ?? 'Dashboard Admin - CBT' }}</title>
   <script src="https://cdn.tailwindcss.com"></script>
-</head>
+</head> 
 <body class="bg-gray-100 min-h-screen flex flex-col font-sans">
 
   <!-- Navbar -->
@@ -29,21 +29,17 @@
     <!-- Sidebar -->
     <aside class="w-64 bg-white shadow-xl border-r p-4 hidden md:block">
         <nav class="space-y-2">
+          `
             <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-100 text-blue-700 font-medium transition">
             🏠 Dashboard
             </a>
-            <a href="{{ route('admin.ujian.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-100 text-blue-700 font-medium transition">
-            📋 Daftar Ujian
-            </a>
-            <a href="{{ route('admin.ujian.create') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-100 text-blue-700 font-medium transition">
-            ➕ Tambah Ujian
-            </a>
             <a href="{{ route('admin.user.show') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-100 text-blue-700 font-medium transition">
-            👁 Daftar Peserta
+            👁 Siswa
             </a>
-            <a href="{{ route('admin.user.create') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-100 text-blue-700 font-medium transition">
-            👤 Tambah Peserta
+            <a href="{{ route('admin.ujian.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-100 text-blue-700 font-medium transition">
+            📋 Ujian
             </a>
+            
             <a href="{{ route('admin.kelas.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-100 text-blue-700 font-medium transition">
             📘 Manajemen Kelas
             </a>

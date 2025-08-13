@@ -1,11 +1,15 @@
-<x-layouts.admin title="Data Peserta">
+<x-layouts.admin title="Daftar Siswa">
 
     <div class="max-w-6xl mx-auto bg-white shadow-md rounded-xl p-6 sm:p-8">
 
         <!-- Header -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
-            <h2 class="text-2xl font-bold text-gray-800">📋 Daftar Peserta</h2>
-            <div class="flex gap-2">
+            <h2 class="text-2xl font-bold text-gray-800">📋 Daftar Siswa</h2>
+            <div class="flex gap-2 flex-wrap sm:flex-nowrap">
+                <a href="{{ route('admin.user.create') }}"
+                   class="bg-blue-600 text-white px-4 py-2 text-sm rounded-lg hover:bg-blue-700 transition">
+                   ➕ Tambah Siswa
+                </a>
                 <a href="{{ route('admin.user.export.excel') }}"
                    class="bg-green-600 text-white px-4 py-2 text-sm rounded-lg hover:bg-green-700 transition">
                    📥 Export Excel
@@ -130,10 +134,7 @@
             {{ $users->appends(request()->query())->links('vendor.pagination.tailwind') }}
         </div>
 
-        <a href="{{ route('admin.dashboard') }}"
-           class="text-sm text-gray-600 hover:underline mt-6 inline-block">
-           ← Kembali ke Dashboard
-        </a>
+        
     </div>
 
     <script>
